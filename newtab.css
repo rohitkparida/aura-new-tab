@@ -1,0 +1,397 @@
+:root {
+    --fade-duration: 0.6s;
+    --fade-timing: cubic-bezier(0.2, 0.6, 0.35, 1);
+    --transition-duration: 0.2s;
+    --transition-timing: cubic-bezier(0.4, 0.1, 0.3, 1);
+    --text-color: rgba(255, 255, 255, 0.9);
+    --text-color-secondary: rgba(255, 255, 255, 0.7);
+    --theme-transition-duration: 0.5s; /* Updated from 1.2s for snappier transitions */
+    --theme-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Add these at the top, right after :root */
+html {
+    background: #111111; /* Dark fallback color */
+    color: rgba(255, 255, 255, 0.9); /* Default text color */
+}
+
+/* Update body styles */
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    user-select: none;
+    background-size: 100% 100%;
+    background-position: center;
+    /* Add these properties */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    font-family: 'Mattone', sans-serif; /* Default font */
+}
+
+body.ready {
+    opacity: 1;
+}
+
+/* Theme transition container */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: inherit;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
+    transition: opacity var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+/* Theme gradients with fixed positioning */
+.theme-background {
+    position: fixed;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    /* Remove transition from base class */
+    will-change: opacity;
+    backface-visibility: hidden;
+}
+
+/* Add a new class for enabling transitions after initial load */
+.theme-background.transitions-enabled {
+    transition: opacity var(--theme-transition-duration) var(--theme-transition-timing);
+}
+
+/* Keep the active class as is */
+.theme-background.active {
+    opacity: 1;
+}
+
+/* Define gradients as separate backgrounds */
+.theme-background.graphite { background: radial-gradient(circle at center, #111111 0%, #111111 6%, #181818 18%, #252525 32%, #383838 57%, #535353 79%, #696969 100%); }
+.theme-background.sunrise { background: radial-gradient(circle at center, #FFD700 0%, #FFB84D 25%, #FFA07A 50%, #FF8C69 75%, #FF7F50 100%); }
+.theme-background.horizon { background: radial-gradient(circle at center, #E6B980 0%, #EAC5A3 25%, #B3CDE0 50%, #6497B1 75%, #005B96 100%); }
+.theme-background.twilight { background: radial-gradient(circle at center, #9370DB 0%, #8A2BE2 25%, #9932CC 50%, #BA55D3 75%, #DDA0DD 100%); }
+.theme-background.midnight { background: radial-gradient(circle at center, #232526 0%, #1C1C1C 25%, #151515 50%, #0F0F0F 75%, #090909 100%); }
+.theme-background.aurora { background: radial-gradient(circle at center, #FD783F 0%, #FD783F 6%, #FF5078 18%, #dc46c8 32%, #b446ff 57%, #797ff2 79%, #6D8EFD 100%); }
+.theme-background.pacific { background: radial-gradient(circle at center, #00B4DB 0%, #0083B0 25%, #005C97 50%, #363795 75%, #1C1C7C 100%); }
+.theme-background.sierra { background: radial-gradient(circle at center, #FFB75E 0%, #ED8F03 25%, #FA7199 50%, #C23B47 75%, #961B30 100%); }
+.theme-background.rose { background: radial-gradient(circle at center, #FFDEE1 0%, #FFB5C1 25%, #FF8FA3 50%, #FF738B 75%, #FF5874 100%); }
+.theme-background.forest { background: radial-gradient(circle at center, #2ECC71 0%, #27AE60 25%, #218C74 50%, #145A32 75%, #0B3B24 100%); }
+.theme-background.ocean { background: radial-gradient(circle at center, #89F7FE 0%, #66A6FF 25%, #4834D4 50%, #30336B 75%, #130F40 100%); }
+.theme-background.desert { background: radial-gradient(circle at center, #F4D03F 0%, #F5B041 25%, #E67E22 50%, #CA6F1E 75%, #935116 100%); }
+.theme-background.lavender { background: radial-gradient(circle at center, #E8E8FF 0%, #D4BFFF 25%, #B19CD9 50%, #8E44AD 75%, #6C3483 100%); }
+.theme-background.mint { background: radial-gradient(circle at center, #AAFFA9 0%, #9EECC6 25%, #7FCFB6 50%, #5FB2A6 75%, #42958F 100%); }
+.theme-background.light { background: radial-gradient(circle at center, #FFFFFF 0%, #F8F9FA 25%, #E9ECEF 50%, #DEE2E6 75%, #CED4DA 100%); }
+
+/* Ensure clock container stays above backgrounds */
+.clock-container {
+    position: relative;
+    z-index: 3;
+}
+
+/* Animations */
+.fade-in {
+    opacity: 0;
+    transform: scale(0.98);
+    filter: blur(10px);
+    animation: fadeIn var(--fade-duration) var(--fade-timing) forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.96); filter: blur(10px); }
+    to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+/* Time display */
+.time {
+    opacity: 1;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+    color: var(--text-color);
+    user-select: none;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    position: relative;
+    margin: 0 auto;
+}
+
+.time-main {
+    font-size: 14vh;
+    transform: translateX(0.2em);
+    transition: all var(--transition-duration) var(--transition-timing);
+    /* Add initial state */
+    opacity: 0;
+    filter: blur(10px);
+    transition: opacity 0.5s ease, 
+                font-size var(--transition-duration) var(--transition-timing),
+                filter 0.5s ease;
+    will-change: transform, opacity, filter;
+}
+
+.time-main.visible {
+    opacity: 1;
+    filter: blur(0);
+}
+
+.time-main.solo { font-size: 20vh; }
+.time-main.with-date { font-size: 14vh; }
+.time-main.with-ampm { transform: translateX(0); }
+
+/* Initial state for time container */
+.time {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.time.visible {
+    opacity: 1;
+}
+
+.ampm {
+    font-size: 8vh;
+    margin-left: 0.4em;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-20px);
+    transition: all var(--transition-duration) var(--transition-timing);
+    color: var(--text-color);
+}
+
+.ampm.with-date { font-size: 7vh; }
+.ampm.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+    width: auto;
+}
+
+/* Grain effect */
+.grain {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    filter: url(#grainFilter);
+    opacity: 0;
+    pointer-events: none;
+    will-change: opacity, transform, filter;
+    display: none;
+}
+
+.grain.visible {
+    display: block;
+    animation: fadeInGrain var(--fade-duration) var(--fade-timing) forwards;
+}
+
+@keyframes fadeInGrain {
+    from { 
+        opacity: 0; 
+        transform: scale(0.98); 
+        filter: url(#grainFilter) blur(8px); 
+    }
+    to { 
+        opacity: 0.25; 
+        transform: scale(1); 
+        filter: url(#grainFilter) blur(0); 
+    }
+}
+
+/* Clock container and date */
+.clock-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1vh;
+    position: relative;
+    z-index: 2;
+    transition: gap var(--transition-duration) var(--transition-timing);
+}
+
+.date-container {
+    color: var(--text-color-secondary);
+    font-size: 4vh;
+    text-align: center;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+    text-transform: uppercase;
+    transition: all var(--transition-duration) var(--transition-timing);
+}
+
+.date-container.solo { font-size: 6vh; }
+.date-container.both-visible { font-size: 3.5vh; }
+.date-container.single-item { font-size: 4.5vh; }
+.date-container .day { margin-right: 1em; }
+.date-container .day:only-child { margin-right: 0; }
+.clock-container.single-element { gap: 0; }
+
+/* Animation disabled states */
+.animations-disabled .fade-in {
+    transition: none !important;
+    animation: none !important;
+}
+
+.animations-disabled .analog-hand {
+    transition: none !important;
+}
+
+/* Keep other transitions working even when animations are disabled */
+.animations-disabled .time,
+.animations-disabled .time-main,
+.animations-disabled .ampm,
+.animations-disabled .date-container {
+    transition: none !important;
+}
+
+/* Ensure analog clock stays visible when animations are disabled */
+.animations-disabled .analog-clock {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+}
+
+/* Analog clock */
+.analog-clock {
+    width: 300px;
+    height: 300px;
+    border: 3px solid var(--text-color-secondary);
+    border-radius: 50%;
+    position: relative;
+    display: none;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+}
+
+.analog-clock::before {
+    content: '';
+    position: absolute;
+    width: 320px;
+    height: 320px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, transparent 60%, rgba(255, 255, 255, 0.1));
+}
+
+.hour-marker {
+    position: absolute;
+    width: 2px;
+    height: 15px;
+    background: var(--text-color-secondary);
+    left: 50%;
+    transform-origin: 50% 150px;
+}
+
+.hour-marker.major {
+    width: 3px;
+    height: 20px;
+    background: var(--text-color);
+}
+
+.analog-hand {
+    position: absolute;
+    bottom: 50%;
+    left: 50%;
+    transform-origin: bottom;
+    background: var(--text-color);
+    border-radius: 100px;
+}
+
+.continuous-motion .analog-hand { transition: transform 0.016s linear; }
+.analog-clock:not(.continuous-motion) .second-hand { transition: none; }
+
+.hour-hand {
+    width: 4px;
+    height: 70px;
+    margin-left: -2px;
+    background: linear-gradient(to top, var(--text-color), var(--text-color-secondary));
+}
+
+.minute-hand {
+    width: 3px;
+    height: 110px;
+    margin-left: -1.5px;
+    background: linear-gradient(to top, var(--text-color), var(--text-color-secondary));
+}
+
+.second-hand {
+    width: 1px;
+    height: 120px;
+    margin-left: -0.5px;
+    background: var(--text-color-secondary);
+}
+
+.clock-center {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: var(--text-color);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.clock-center::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Analog date display */
+.analog-date, .analog-day {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-color);
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+.analog-date {
+    bottom: 35%;
+    background: color-mix(in srgb, var(--text-color-secondary) 10%, transparent);
+    padding: 5px 15px;
+    border-radius: 15px;
+    backdrop-filter: blur(5px);
+    width: auto;
+}
+
+.analog-day {
+    top: 35%;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    width: 100%;
+}
+
+/* Animation for analog clock hands */
+@keyframes sweepIn {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(var(--final-rotation)); }
+}
+
+.analog-hand.sweep-in { animation: sweepIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+/* Mobile responsiveness */
+@media screen and (max-width: 768px) {
+    .time { font-size: 4rem; }
+}
+
+.time-main.ready {
+    opacity: 1;
+}
+
+/* Analog clock animations are now handled in the main styles with reduced motion support */

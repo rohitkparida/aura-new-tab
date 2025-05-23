@@ -1,0 +1,996 @@
+import { formatTime, formatDate, getDayOfWeek } from './utils/date-time';
+import { getSettings } from './utils/storage';
+import { 
+  MessageType, 
+  ClockSettings, 
+  ThemeData, 
+  ClockElements,
+  AnimationType,
+  BlendMode,
+  FontFamily,
+  ThemeName,
+  TimeFormat
+} from './types/clock';
+
+// Constants
+const OPACITY_TRANSPARENT = '0';
+const OPACITY_VISIBLE = '1';
+
+class AuraClockTab {
+  // DOM Elements
+  private elements: ClockElements;
+  private clockInterval: NodeJS.Timeout | null = null;
+  private settings: ClockSettings;
+  private cachedSettings: Partial<ClockSettings> = {};
+
+  // Default settings
+  private readonly DEFAULT_SETTINGS: ClockSettings = {
+    // Time display
+    timeFormat: '12',
+    showAmPm: true,
+    showDate: true,
+    showDay: true,
+    showSeconds: true,
+    clockStyle: 'digital',
+    fontFamily: 'Inter',
+    fontSize: '4rem',
+    fontWeight: '400',
+    theme: 'dynamic',
+    textColor: '#ffffff',
+    backgroundColor: '#1a1a1a',
+    gradientColors: {
+      start: ['#1a1a1a', '#2c3e50'],
+      end: ['#1a1a1a', '#4a148c']
+    },
+    gradientStyle: 'linear-gradient(135deg, var(--start-color), var(--end-color))',
+    enableAnimations: true,
+    animationSpeed: 'normal',
+    showGrain: true,
+    grainIntensity: 0.1,
+    grainOpacity: 0.15,
+    grainSize: 1.5,
+    grainSpeed: 1,
+    grainColor: '#000000',
+    grainBlendMode: 'overlay',
+    showMarkers: true,
+    markerSize: 8,
+    markerColor: '#ffffff',
+    markerOpacity: 0.7,
+    smoothMotion: true,
+    smoothMotionSpeed: 0.5,
+    customBackground: null,
+    backgroundBlur: 0,
+    backgroundBrightness: 1,
+    backgroundContrast: 1,
+    backgroundSaturation: 1,
+    backgroundHue: 0,
+    backgroundOpacity: 1,
+    backgroundBlendMode: 'normal',
+    customCss: '',
+    debugMode: false
+  } as const;
+
+  constructor() {
+    // Initialize elements
+    this.elements = {
+      timeMain: document.querySelector('.time-main'),
+      ampm: document.querySelector('.ampm'),
+      day: document.querySelector('.day'),
+      date: document.querySelector('.date'),
+      analogClock: document.querySelector('.analog-clock'),
+      hourHand: document.querySelector('.hour-hand'),
+      minuteHand: document.querySelector('.minute-hand'),
+      secondHand: document.querySelector('.second-hand'),
+      clockCenter: document.querySelector('.clock-center'),
+      analogDay: document.querySelector('.analog-day'),
+      analogDate: document.querySelector('.analog-date'),
+      grain: document.querySelector('.grain'),
+      body: document.body
+    };
+
+    // Initialize with default settings
+    this.settings = { ...this.DEFAULT_SETTINGS };
+  }
+
+  // Theme-related functions
+  private getTimeBasedTheme(): ThemeName {
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour < 12) return 'sunrise';
+    if (hour >= 12 && hour < 18) return 'horizon';
+    if (hour >= 18 && hour < 21) return 'twilight';
+    return 'midnight';
+  }
+
+  // Clock update functions
+  private updateDigitalClock(settings: ClockSettings): void {
+    const now = new Date();
+    const timeMainEl = this.elements.timeMain;
+    const ampmEl = this.elements.ampm;
+    const dayEl = this.elements.day;
+    const dateEl = this.elements.date;
+
+    if (!timeMainEl || !ampmEl || !dayEl || !dateEl) return;
+
+    // Format time based on 12/24 hour setting
+    const timeResult = formatTime(
+      now.getHours(),
+      now.getMinutes(),
+      now.getSeconds(),
+      settings.showSeconds,
+      settings.timeFormat === '12',
+      false
+    );
+
+    // Update time display
+    timeMainEl.textContent = timeResult.time;
+
+    // Update AM/PM if needed
+    if (settings.timeFormat === '12' && settings.showAmPm) {
+      ampmEl.textContent = timeResult.ampm;
+      ampmEl.style.opacity = OPACITY_VISIBLE;
+    } else {
+      ampmEl.style.opacity = OPACITY_TRANSPARENT;
+    }
+
+    // Update date if needed
+    if (settings.showDate) {
+      dateEl.textContent = formatDate(now);
+      dateEl.style.opacity = OPACITY_VISIBLE;
+  const hours = now.getHours() % 12;
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+  const ms = now.getMilliseconds();
+
+  const hourDeg = (hours * 30) + (minutes * 0.5);
+  const minuteDeg = (minutes * 6) + (seconds * 0.1);
+  const secondDeg = (seconds * 6) + (ms * 0.006);
+
+  const { hourHand, minuteHand, secondHand } = elements;
+
+  if (hourHand) {
+    hourHand.style.transform = `translateX(-50%) rotate(${hourDeg}deg)`;
+  }
+  
+  if (minuteHand) {
+    minuteHand.style.transform = `translateX(-50%) rotate(${minuteDeg}deg)`;
+  }
+  
+  if (secondHand) {
+    if (settings.smoothMotion) {
+      secondHand.style.transform = `translateX(-50%) rotate(${secondDeg}deg)`;
+    } else {
+      secondHand.style.transform = `translateX(-50%) rotate(${seconds * 6}deg)`;
+    }
+  }
+
+  // Update analog date and day
+  if (elements.analogDay) {
+    elements.analogDay.textContent = getDayOfWeek(now, 'long');
+    elements.analogDay.style.opacity = settings.showDay ? OPACITY_VISIBLE : OPACITY_TRANSPARENT;
+  }
+  
+  if (elements.analogDate) {
+    elements.analogDate.textContent = formatDate(now);
+    elements.analogDate.style.opacity = settings.showDate ? OPACITY_VISIBLE : OPACITY_TRANSPARENT;
+  }
+}
+
+function updateClock(settings: ClockSettings): void {
+  try {
+    const now = new Date();
+    
+    // Update digital clock
+    updateDigitalClock(settings);
+    
+    // Update analog clock if visible
+    if (['analog', 'both'].includes(settings.clockStyle)) {
+      updateAnalogClock(settings, true);
+    }
+    
+    // Update date and day
+    if (elements.day) {
+      elements.day.textContent = getDayOfWeek(now, 'long');
+      elements.day.style.opacity = settings.showDay ? OPACITY_VISIBLE : OPACITY_TRANSPARENT;
+    }
+    
+    if (elements.date) {
+      elements.date.textContent = formatDate(now);
+      elements.date.style.opacity = settings.showDate ? OPACITY_VISIBLE : OPACITY_TRANSPARENT;
+    }
+    
+    // Update clock container visibility
+    if (elements.analogClock) {
+      elements.analogClock.style.display = settings.clockStyle === 'analog' ? 'block' : 'none';
+    }
+    
+    // Update font styles
+    if (elements.body) {
+      elements.body.style.fontFamily = settings.fontFamily;
+      elements.body.style.fontSize = settings.fontSize;
+      elements.body.style.fontWeight = settings.fontWeight;
+    }
+    
+  } catch (error) {
+    console.error('Error updating clock:', error);
+  }
+}
+
+function updateVisibility(settings: ClockSettings): void {
+  // Update clock style visibility
+  if (elements.analogClock) {
+    elements.analogClock.style.display = ['analog', 'both'].includes(settings.clockStyle) ? 'block' : 'none';
+  }
+  
+  // Update AM/PM visibility
+  if (elements.ampm) {
+    const is12HourFormat = ['12', '12h', '12hr'].includes(settings.timeFormat);
+    elements.ampm.style.opacity = (is12HourFormat && settings.showAmPm) ? OPACITY_VISIBLE : OPACITY_TRANSPARENT;
+  }
+  
+  // Update date and day visibility
+  if (elements.day) {
+    elements.day.style.opacity = settings.showDay ? OPACITY_VISIBLE : OPACITY_TRANSPARENT;
+  }
+  
+  if (elements.date) {
+    elements.date.style.opacity = settings.showDate ? OPACITY_VISIBLE : OPACITY_TRANSPARENT;
+  }
+  
+  // Update grain effect
+  if (elements.grain) {
+    elements.grain.style.opacity = settings.showGrain ? '1' : '0';
+  }
+}
+
+function startClockInterval(settings: ClockSettings): void {
+  // Clear any existing interval
+  if (clockInterval !== null) {
+    clearInterval(clockInterval);
+  }
+  
+  // Update immediately
+  updateClock(settings);
+  
+  // Set up new interval
+  clockInterval = window.setInterval(() => {
+    updateClock(settings);
+  }, 1000);
+}
+
+function applyTheme(themeData: ThemeData): void {
+  if (!elements.body) return;
+  
+  const { backgroundColor, gradientColors, gradientAngle, textColor } = themeData;
+  
+  // Apply background gradient
+  if (gradientColors && gradientColors.length > 0) {
+    const gradient = `linear-gradient(${gradientAngle}deg, ${gradientColors.join(', ')})`;
+    elements.body.style.background = `${gradient} ${backgroundColor}`;
+  } else {
+    elements.body.style.background = backgroundColor;
+  }
+  
+  // Apply text color
+  elements.body.style.color = textColor;
+}
+
+async function loadSettings(): Promise<ClockSettings> {
+  try {
+    const settings = await getSettings();
+    return { ...DEFAULT_SETTINGS, ...settings };
+  } catch (error) {
+    console.error('Error loading settings:', error);
+    return DEFAULT_SETTINGS;
+  }
+}
+
+// Initialize the application
+async function init(): Promise<void> {
+  try {
+    // Load settings
+    const settings = await loadSettings();
+    
+    // Apply initial settings
+    updateVisibility(settings);
+    applyTheme({
+      theme: settings.theme,
+      textColor: settings.textColor,
+      backgroundColor: settings.backgroundColor,
+      gradientColors: settings.gradientColors,
+      gradientAngle: settings.gradientAngle
+    });
+    
+    // Start the clock
+    startClockInterval(settings);
+    
+    // Set up message listener
+    chrome.runtime.onMessage.addListener(handleMessages);
+    
+    // Set up storage change listener
+    chrome.storage.onChanged.addListener(handleStorageChanges);
+    
+  } catch (error) {
+    console.error('Error initializing clock:', error);
+  }
+}
+
+// Handle messages from other parts of the extension
+function handleMessages(
+  message: { type: string; [key: string]: any },
+  _sender: chrome.runtime.MessageSender,
+  sendResponse: (response?: any) => void
+): void {
+  if (message.type === 'settingsChanged') {
+    loadSettings().then(settings => {
+      updateVisibility(settings);
+      updateClock(settings);
+    });
+  }
+  
+  if (sendResponse) {
+    sendResponse({ success: true });
+  }
+}
+
+// Handle storage changes
+function handleStorageChanges(
+  changes: { [key: string]: chrome.storage.StorageChange },
+  areaName: string
+): void {
+  if (areaName !== 'sync') return;
+  
+  if (changes.settings) {
+    const newSettings = changes.settings.newValue;
+    if (newSettings) {
+      updateVisibility(newSettings);
+      updateClock(newSettings);
+    }
+  }
+}
+
+// Helper function to ensure all required settings are present
+function ensureSettings(settings: Partial<ClockSettings>): ClockSettings {
+  return { ...DEFAULT_SETTINGS, ...settings };
+}
+
+// Initialize the clock when the DOM is ready
+const initializeApp = (): void => {
+  try {
+    const domReady = () => {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    };
+    domReady();
+  } catch (error) {
+    console.error('Failed to initialize app:', error);
+  }
+};
+
+initializeApp();
+
+// DOM Elements
+const elements: ClockElements = {
+  timeMain: document.querySelector('.time-main'),
+  ampm: document.querySelector('.ampm'),
+  day: document.querySelector('.day'),
+  date: document.querySelector('.date'),
+  analogClock: document.querySelector('.analog-clock'),
+  hourHand: document.querySelector('.hour-hand'),
+  minuteHand: document.querySelector('.minute-hand'),
+  secondHand: document.querySelector('.second-hand'),
+  clockCenter: document.querySelector('.clock-center'),
+  analogDay: document.querySelector('.analog-day'),
+  analogDate: document.querySelector('.analog-date'),
+  grain: document.querySelector('.grain'),
+  body: document.body
+};
+
+// Default settings
+const DEFAULT_SETTINGS: ClockSettings = {
+  timeFormat: '12',
+  showAmPm: true,
+  showDate: true,
+  showDay: true,
+  showSeconds: true,
+  clockStyle: 'digital',
+  gradientStyle: 'linear',
+  enableAnimations: true,
+  showGrain: true,
+  showMarkers: true,
+  smoothMotion: true,
+  fontFamily: 'Arial, sans-serif',
+  fontSize: '16px',
+  fontWeight: '400'
+};
+
+// Theme-related functions
+function getTimeBasedTheme(): string {
+  const hour = new Date().getHours();
+  if (hour >= 6 && hour < 12) return 'sunrise';
+  if (hour >= 12 && hour < 18) return 'horizon';
+  if (hour >= 18 && hour < 21) return 'twilight';
+  return 'midnight';
+}
+
+export {}; // Mark as module
+
+// Clock update functions
+function updateDigitalClock(settings: ClockSettings): void {
+  const now = new Date();
+  const timeMainEl = elements.timeMain;
+  const ampmEl = elements.ampm;
+
+  if (!timeMainEl) return;
+
+  let hours = now.getHours();
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  let ampm = '';
+  
+  // Check for multiple 12-hour format variants for backward compatibility
+  const is12HourFormat = ['12', '12h', '12hr'].includes(settings.timeFormat);
+  const amPmVisible = is12HourFormat && !!settings.showAmPm;
+  console.log('AM/PM Debug:', { is12HourFormat, showAmPm: settings.showAmPm, amPmVisible });
+
+  if (is12HourFormat) {
+    ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+  }
+
+
+  timeMainEl.textContent = `${hours.toString().padStart(is12HourFormat ? 1 : 2, '0')}:${minutes}`;
+  timeMainEl.classList.toggle('with-ampm', amPmVisible);
+
+  if (ampmEl) {
+    if (amPmVisible) {
+      ampmEl.textContent = ampm;
+      ampmEl.style.opacity = OPACITY_VISIBLE;
+    } else {
+      ampmEl.style.opacity = OPACITY_TRANSPARENT;
+    }
+  }
+}
+
+function updateAnalogClock(settings: ClockSettings, _animate = false): void {
+  const now = new Date();
+  const hours = now.getHours() % 12;
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+  const ms = now.getMilliseconds();
+
+  const hourDeg = (hours * 30) + (minutes * 0.5);
+  const minuteDeg = (minutes * 6) + (seconds * 0.1);
+  const secondDeg = (seconds * 6) + (ms * 0.006);
+
+  const hourHand = elements.hourHand;
+  const minuteHand = elements.minuteHand;
+  const secondHand = elements.secondHand;
+
+  if (hourHand) {
+    hourHand.style.transform = `translateX(-50%) rotate(${hourDeg}deg)`;
+  }
+  
+  if (minuteHand) {
+    minuteHand.style.transform = `translateX(-50%) rotate(${minuteDeg}deg)`;
+  }
+  
+  if (secondHand) {
+    if (settings.smoothMotion) {
+      secondHand.style.transform = `translateX(-50%) rotate(${secondDeg}deg)`;
+    } else {
+      secondHand.style.transform = `translateX(-50%) rotate(${seconds * 6}deg)`;
+    }
+  }
+
+  // Update analog date and day
+  if (elements.analogDay) {
+    elements.analogDay.textContent = getDayOfWeek(now, 'long');
+    elements.analogDay.style.opacity = settings.showDay ? OPACITY_VISIBLE : OPACITY_TRANSPARENT;
+  }
+  
+  if (elements.analogDate) {
+    elements.analogDate.textContent = formatDate(now);
+    elements.analogDate.style.opacity = settings.showDate ? OPACITY_VISIBLE : OPACITY_TRANSPARENT;
+  }
+}
+
+function updateClock(settings: ClockSettings): void {
+  try {
+    const now = new Date();
+    
+    // Update digital clock
+    updateDigitalClock(settings);
+    
+    // Update analog clock if visible
+    if (['analog', 'both'].includes(settings.clockStyle)) {
+      updateAnalogClock(settings, true);
+    }
+    
+    // Update date and day
+    if (elements.day) {
+      elements.day.textContent = getDayOfWeek(now, 'long');
+      elements.day.style.opacity = settings.showDay ? OPACITY_VISIBLE : OPACITY_TRANSPARENT;
+    }
+    
+    if (elements.date) {
+      elements.date.textContent = formatDate(now);
+      elements.date.style.opacity = settings.showDate ? OPACITY_VISIBLE : OPACITY_TRANSPARENT;
+    }
+    
+    // Update clock container visibility
+    if (elements.analogClock) {
+      elements.analogClock.style.display = settings.clockStyle === 'analog' ? 'block' : 'none';
+    }
+    
+    // Update font styles
+    if (elements.body) {
+      elements.body.style.fontFamily = settings.fontFamily;
+      elements.body.style.fontSize = settings.fontSize;
+      elements.body.style.fontWeight = settings.fontWeight;
+    }
+    
+  } catch (error) {
+    console.error('Error updating clock:', error);
+  }
+}
+
+function updateVisibility(settings: ClockSettings): void {
+  // Update clock style visibility
+  if (elements.analogClock) {
+    elements.analogClock.style.display = ['analog', 'both'].includes(settings.clockStyle) ? 'block' : 'none';
+  }
+  
+  // Update AM/PM visibility
+  if (elements.ampm) {
+    const is12HourFormat = ['12', '12h', '12hr'].includes(settings.timeFormat);
+    elements.ampm.style.opacity = (is12HourFormat && settings.showAmPm) ? OPACITY_VISIBLE : OPACITY_TRANSPARENT;
+  }
+  
+  // Update date and day visibility
+  if (elements.day) {
+    elements.day.style.opacity = settings.showDay ? OPACITY_VISIBLE : OPACITY_TRANSPARENT;
+  }
+  
+  if (elements.date) {
+    elements.date.style.opacity = settings.showDate ? OPACITY_VISIBLE : OPACITY_TRANSPARENT;
+  }
+  
+  // Update grain effect
+  if (elements.grain) {
+    elements.grain.style.opacity = settings.showGrain ? '0.1' : '0';
+  }
+}
+
+function startClockInterval(settings: ClockSettings): void {
+  // Clear existing interval if any
+  if (clockInterval) {
+    clearInterval(clockInterval);
+  }
+  
+  // Update immediately
+  updateClock(settings);
+  
+  // Set up interval based on smooth motion setting
+  if (settings.smoothMotion) {
+    // Update more frequently for smooth second hand
+    clockInterval = window.setInterval(() => updateClock(settings), 50);
+  } else {
+    // Normal update once per second
+    clockInterval = window.setInterval(() => updateClock(settings), 1000);
+  }
+}
+
+function applyTheme(themeData: ThemeData): void {
+  // Apply theme colors to the document
+  document.documentElement.style.setProperty('--text-color', themeData.textColor);
+  document.documentElement.style.setProperty('--background-color', themeData.backgroundColor);
+  
+  // Update gradient if available
+  if (themeData.gradientColors && themeData.gradientColors.length > 0) {
+    const gradient = `linear-gradient(${themeData.gradientAngle}deg, ${themeData.gradientColors.join(', ')})`;
+    document.documentElement.style.setProperty('--background-gradient', gradient);
+  }
+  
+  // Update body class for theme
+  document.body.className = ''; // Clear existing theme classes
+  document.body.classList.add(themeData.theme);
+}
+
+async function loadSettings(): Promise<ClockSettings> {
+  try {
+    const settings = await getSettings();
+    // Ensure all required settings are present and properly typed
+    const mergedSettings: ClockSettings = {
+      ...DEFAULT_SETTINGS,
+      ...settings,
+      // Ensure fontWeight is always a string
+      fontWeight: settings.fontWeight ? String(settings.fontWeight) : DEFAULT_SETTINGS.fontWeight
+    };
+    cachedSettings = mergedSettings;
+    return mergedSettings;
+  } catch (error) {
+    console.error('Error loading settings:', error);
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+async function init(): Promise<void> {
+  try {
+    // Wait for DOM to be ready
+    await domReady();
+    
+    // Load settings
+    const settings = await loadSettings();
+    cachedSettings = settings;
+    
+    // Initialize clock
+    updateClock(settings);
+    updateVisibility(settings);
+    startClockInterval(settings);
+    
+    // Set up theme
+    const themeData = await getCurrentThemeData();
+    applyTheme(themeData);
+    
+    // Mark body as ready
+    if (elements.body) {
+      elements.body.classList.add('ready');
+      elements.body.style.opacity = '1';
+    }
+    
+    // Set up message listeners
+    chrome.runtime.onMessage.addListener(handleMessages);
+    
+    // Set up storage change listener
+    chrome.storage.onChanged.addListener(handleStorageChanges);
+    
+  } catch (error) {
+    console.error('Error initializing clock:', error);
+    // Still show the clock even if there's an error
+    if (elements.body) {
+      elements.body.classList.add('ready');
+      elements.body.style.opacity = '1';
+    }
+  }
+}
+
+async function getCurrentThemeData(): Promise<ThemeData> {
+  // In a real implementation, this would get the current theme from storage
+  // For now, return a default theme
+  return {
+    theme: 'graphite',
+    textColor: '#ffffff',
+    backgroundColor: '#111111',
+    gradientColors: ['#111111', '#333333'],
+    gradientAngle: 180
+  };
+}
+
+function handleMessages(
+  message: { type: string; [key: string]: any },
+  _sender: chrome.runtime.MessageSender,
+  sendResponse: (response?: any) => void
+): void {
+  try {
+    switch (message.type) {
+      case MessageType.ThemeUpdate:
+applyTheme(message['themeData']);
+        break;
+      case MessageType.RequestCurrentThemeData:
+        sendResponse(getCurrentThemeData());
+        break;
+      case MessageType.SettingsChanged:
+        // Handle settings change
+const newSettings = { ...cachedSettings, ...message['settings'] };
+        cachedSettings = newSettings;
+        updateVisibility(newSettings);
+        startClockInterval(newSettings);
+        break;
+    }
+  } catch (error) {
+    console.error('Error handling message:', error);
+  }
+}
+
+function handleStorageChanges(
+  changes: { [key: string]: chrome.storage.StorageChange },
+  areaName: string
+): void {
+  if (areaName === 'sync') {
+    const settings: Partial<ClockSettings> = {};
+    let shouldUpdate = false;
+
+    for (const [key, { newValue }] of Object.entries(changes)) {
+      if (key in DEFAULT_SETTINGS) {
+        (settings as any)[key] = newValue;
+        shouldUpdate = true;
+      }
+    }
+
+    if (shouldUpdate) {
+      const newSettings = { ...cachedSettings, ...settings };
+      cachedSettings = newSettings;
+      updateVisibility(newSettings);
+      startClockInterval(newSettings);
+    }
+  }
+}
+
+// Initialize the clock when the DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => init().catch(console.error));
+} else {
+  init().catch(console.error);
+}
+
+// Update the DEFAULT_SETTINGS to include all required properties
+const DEFAULT_SETTINGS: ClockSettings = {
+  // Time display
+  timeFormat: '12',
+  showAmPm: true,
+  showDate: true,
+  showDay: true,
+  showSeconds: true,
+  
+  // Clock style
+  clockStyle: 'digital',
+  gradientStyle: 'linear',
+  enableAnimations: true,
+  showGrain: true,
+  showMarkers: true,
+  smoothMotion: true,
+  fontFamily: 'Arial, sans-serif',
+  fontSize: '16px',
+  fontWeight: '400',
+  
+  // Theme
+  theme: 'graphite',
+  textColor: '#ffffff',
+  backgroundColor: '#111111',
+  gradientColors: ['#111111', '#333333'],
+  gradientAngle: 180,
+  
+  // Advanced settings
+  animationType: 'fade',
+  grainIntensity: 0.5,
+  grainOpacity: 0.1,
+  grainBlendMode: 'overlay' as BlendMode
+};
+
+// Helper function to ensure all required settings are present
+function ensureSettings(settings: Partial<ClockSettings>): ClockSettings {
+  return { ...DEFAULT_SETTINGS, ...settings };
+}
+  // Clock update interval reference
+  private clockInterval: number | null = null;
+
+  async init(): Promise<void> {
+    try {
+      // Wait for DOM to be ready
+      await domReady();
+      
+      // Initialize elements
+      this.initializeElements();
+      
+      // Load settings
+      await this.loadSettings();
+      
+      // Initialize managers
+      this.initializeManagers();
+      
+      // Mark body as ready
+      if (this.elements.body) {
+        this.elements.body.classList.add('ready');
+        this.elements.body.style.opacity = '1';
+        console.log('Body marked as ready');
+      }
+      
+      // Listen for settings changes
+      onSettingsChange((newSettings) => {
+        this.settings = { ...this.settings, ...newSettings } as AppSettings;
+        this.updateClock();
+      });
+    } catch (error) {
+      console.error('Error initializing AuraClockTab:', error);
+      // Still try to show the body even if there's an error
+      if (this.elements.body) {
+        this.elements.body.classList.add('ready');
+        this.elements.body.style.opacity = '1';
+      }
+    }
+  }
+
+  private async loadSettings(): Promise<void> {
+    try {
+      const savedSettings = await getSettings();
+      
+      // Helper function to safely get theme value
+      const getTheme = (theme: string | undefined): ThemeName => {
+        const validThemes: ThemeName[] = ['light', 'dark', 'system', 'dynamic', 'custom'];
+        // Default to 'dark' if theme is 'graphite' or invalid
+        return theme && validThemes.includes(theme as ThemeName) 
+          ? theme as ThemeName 
+          : 'dark';
+      };
+      
+      // Helper function to safely get animation type
+      const getAnimationType = (type: string | undefined): AnimationType => {
+        const validTypes: AnimationType[] = ['fade', 'slide', 'zoom', 'none'];
+        return type && validTypes.includes(type as AnimationType)
+          ? type as AnimationType
+          : 'fade';
+      };
+
+      // Convert saved settings to match AppSettings type with proper type assertions and defaults
+      const convertedSettings: AppSettings = {
+        // Time display
+        timeFormat: (savedSettings as any).timeFormat === '24' ? '24' : '12',
+        showAmPm: (savedSettings as any).showAmPm ?? true,
+        showDate: (savedSettings as any).showDate ?? true,
+        showDay: (savedSettings as any).showDay ?? true,
+        showSeconds: (savedSettings as any).showSeconds ?? true,
+        
+        // Clock style
+        clockStyle: (savedSettings as any).clockStyle === 'analog' ? 'analog' : 
+                   (savedSettings as any).clockStyle === 'both' ? 'both' : 'digital',
+        fontFamily: ((savedSettings as any).fontFamily as FontFamily) || 'Inter',
+        fontSize: (savedSettings as any).fontSize?.toString() || '1rem',
+        fontWeight: (savedSettings as any).fontWeight !== undefined ? 
+                  String((savedSettings as any).fontWeight) : '400',
+        
+        // Colors and theming
+        textColor: (savedSettings as any).textColor || '#ffffff',
+        backgroundColor: (savedSettings as any).backgroundColor || '#000000',
+        backgroundType: (savedSettings as any).backgroundType === 'gradient' ? 'gradient' : 
+                       (savedSettings as any).backgroundType === 'image' ? 'image' : 'solid',
+        gradientColors: Array.isArray((savedSettings as any).gradientColors) ? 
+                      (savedSettings as any).gradientColors : ['#000000', '#1a1a1a'],
+        gradientAngle: typeof (savedSettings as any).gradientAngle === 'number' ? (savedSettings as any).gradientAngle : 180,
+        gradientStyle: (savedSettings as any).gradientStyle || 'linear',
+        backgroundImage: (savedSettings as any).backgroundImage || '',
+        
+        // Background effects
+        backgroundBlur: typeof (savedSettings as any).backgroundBlur === 'number' ? (savedSettings as any).backgroundBlur : 0,
+        backgroundBrightness: typeof (savedSettings as any).backgroundBrightness === 'number' ? (savedSettings as any).backgroundBrightness : 1,
+        backgroundContrast: typeof (savedSettings as any).backgroundContrast === 'number' ? (savedSettings as any).backgroundContrast : 1,
+        backgroundSaturation: typeof (savedSettings as any).backgroundSaturation === 'number' ? (savedSettings as any).backgroundSaturation : 1,
+        backgroundHue: typeof (savedSettings as any).backgroundHue === 'number' ? (savedSettings as any).backgroundHue : 0,
+        backgroundGrayscale: (savedSettings as any).backgroundGrayscale ?? false,
+        backgroundInvert: (savedSettings as any).backgroundInvert ?? false,
+        backgroundSepia: (savedSettings as any).backgroundSepia ?? false,
+        backgroundOpacity: typeof (savedSettings as any).backgroundOpacity === 'number' ? (savedSettings as any).backgroundOpacity : 1,
+        
+        // Animations
+        animationSpeed: (savedSettings as any).animationSpeed === 'slow' ? 'slow' : 
+                       (savedSettings as any).animationSpeed === 'fast' ? 'fast' : 'normal',
+        animationType: getAnimationType((savedSettings as any).animationType),
+        animationDuration: 500,
+        animationEasing: 'ease-in-out',
+        animationDelay: 0,
+        animationIterationCount: 1,
+        animationDirection: 'normal',
+        animationFillMode: 'both',
+        animationsEnabled: (savedSettings as any).animationsEnabled ?? true,
+        
+        // Grain effect
+        showGrain: (savedSettings as any).showGrain ?? false,
+        grainIntensity: typeof (savedSettings as any).grainIntensity === 'number' ? (savedSettings as any).grainIntensity : 0.5,
+        grainOpacity: typeof (savedSettings as any).grainOpacity === 'number' ? (savedSettings as any).grainOpacity : 0.1,
+        grainSize: typeof (savedSettings as any).grainSize === 'number' ? (savedSettings as any).grainSize : 1,
+        grainSpeed: typeof (savedSettings as any).grainSpeed === 'number' ? (savedSettings as any).grainSpeed : 1,
+        grainColor: (savedSettings as any).grainColor || '#ffffff',
+        grainBlendMode: ((savedSettings as any).grainBlendMode as BlendMode) || 'overlay',
+        
+        // Theme
+        theme: getTheme((savedSettings as any).theme as string),
+        customBackground: (savedSettings as any).customBackground || null,
+        
+        // Layout
+        horizontalAlignment: (savedSettings as any).horizontalAlignment === 'left' ? 'left' : 
+                           (savedSettings as any).horizontalAlignment === 'right' ? 'right' : 'center',
+        verticalAlignment: (savedSettings as any).verticalAlignment === 'top' ? 'top' : 
+                         (savedSettings as any).verticalAlignment === 'bottom' ? 'bottom' : 'center',
+        
+        // Developer options
+        debugMode: (savedSettings as any).debugMode ?? false
+      };
+      
+// Merge with default settings to ensure all properties are set
+      this.settings = { ...this.settings, ...convertedSettings };
+      
+      // Update the UI with the loaded settings
+      this.updateClock();
+      this.updateClock();
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+    }
+  }
+
+  private initializeElements(): void {
+    // This method is intentionally left empty as elements are initialized in the constructor
+    // to ensure they're available immediately when the class is instantiated
+  }
+
+  private updateClock(): void {
+    const now = new Date();
+    
+    try {
+      // Format time
+      const timeResult = formatTime(now, this.settings.timeFormat, true);
+      const dateString = formatDate(now);
+      const dayString = getDayOfWeek(now, 'long');
+      
+      // Update digital clock
+      if (this.elements.hours) this.elements.hours.textContent = timeResult.hours;
+      if (this.elements.minutes) this.elements.minutes.textContent = timeResult.minutes;
+      if (this.elements.seconds) this.elements.seconds.textContent = timeResult.seconds;
+      
+      // Update AM/PM if in 12-hour format
+      if (this.elements.ampm) {
+        this.elements.ampm.textContent = timeResult.ampm || '';
+        this.elements.ampm.style.display = this.settings.timeFormat === '12' ? 'inline' : 'none';
+      }
+      
+      // Update date and day visibility based on settings
+      if (this.elements.date) {
+        this.elements.date.textContent = dateString;
+        this.elements.date.style.display = this.settings.showDate ? 'block' : 'none';
+      }
+      
+      if (this.elements.day) {
+        this.elements.day.textContent = dayString;
+        this.elements.day.style.display = this.settings.showDay ? 'block' : 'none';
+      }
+      
+      // Apply font family and size
+      if (this.elements.body) {
+        this.elements.body.style.fontFamily = this.settings.fontFamily;
+        this.elements.body.style.fontSize = this.settings.fontSize;
+        this.elements.body.style.fontWeight = String(this.settings.fontWeight);
+        this.elements.body.style.color = this.settings.textColor;
+      }
+      
+    } catch (error) {
+      console.error('Error updating clock:', error);
+    }
+  }
+
+  private initializeManagers(): void {
+    // Initialize any additional managers here
+    // For example: new ThemeManager(this.elements, this.settings);
+    
+    // Start the clock interval
+    this.updateClock(); // Initial update
+    
+    // Use window.setInterval with proper typing
+    this.clockInterval = window.setInterval(() => this.updateClock(), 1000);
+    
+    // Handle window unload to clean up
+    window.addEventListener('beforeunload', () => {
+      if (this.clockInterval !== null) {
+        window.clearInterval(this.clockInterval);
+        this.clockInterval = null;
+      }
+    });
+  }
+  
+  // Public method to clean up resources
+  public destroy(): void {
+    if (this.clockInterval !== null) {
+      clearInterval(this.clockInterval);
+      this.clockInterval = null;
+    }
+  }
+}
+
+// Initialize the application
+const app = new AuraClockTab();
+app.init().catch(console.error);
+
+// Clean up on unload
+window.addEventListener('beforeunload', () => {
+  app.destroy();
+});

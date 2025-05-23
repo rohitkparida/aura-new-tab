@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Keep Alive</title>
+</head>
+<body>
+    <script>
+        // Keep the page alive
+        const MSG_TYPE_KEEPALIVE = 'keepAlive'; // Consistent with background.js
+
+        setInterval(() => {
+            chrome.runtime.sendMessage({ type: MSG_TYPE_KEEPALIVE }, () => {
+                if (chrome.runtime.lastError) {
+                    console.warn('Error sending keep-alive message:', chrome.runtime.lastError.message);
+                }
+            });
+        }, 1000);
+    </script>
+</body>
+</html>

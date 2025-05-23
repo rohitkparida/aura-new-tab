@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clock Settings</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --primary-light: #60a5fa;
+            --bg: #ffffff;
+            --text: #333333;
+            --border: #e0e0e0;
+            --hover: #f5f5f5;
+            --radius: 12px;
+            --spacing: 16px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #60a5fa;
+                --primary-light: #93c5fd;
+                --bg: #1a1a1a;
+                --text: #ffffff;
+                --border: #333333;
+                --hover: #2d2d2d;
+            }
+        }
+
+        body {
+            width: 320px;
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .header-icon {
+            width: 32px;
+            height: 32px;
+            color: var(--primary);
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: var(--hover);
+            padding: 4px;
+            border-radius: var(--radius);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--bg);
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: var(--hover);
+            border-radius: var(--radius);
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .option:hover {
+            background: var(--border);
+        }
+
+        .option-label {
+            font-size: 14px;
+        }
+
+        /* Modern Toggle Switch */
+        .switch {
+            width: 44px;
+            height: 24px;
+            position: relative;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border);
+            border-radius: 24px;
+            transition: .3s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            border-radius: 50%;
+            transition: .3s;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Select Dropdown */
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+        }
+
+        /* Status Message */
+        #status {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: var(--radius);
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #status.visible {
+            opacity: 1;
+        }
+
+        /* Add smooth transitions for clock settings */
+        #analog-settings,
+        #digital-settings {
+            transition: opacity 0.3s ease, height 0.3s ease;
+            overflow: hidden;
+        }
+
+        #analog-settings:not([style*="display: block"]),
+        #digital-settings:not([style*="display: block"]) {
+            height: 0;
+            opacity: 0;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <h1 class="header-title">Clock Settings</h1>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="basic">Basic</button>
+        <button class="tab" data-tab="appearance">Appearance</button>
+        <button class="tab" data-tab="advanced">Advanced</button>
+    </div>
+
+    <div class="tab-content" id="basic">
+        <div class="section">
+            <div class="section-title">Display</div>
+            <div class="option">
+                <span class="option-label">Date</span>
+                <label class="switch">
+                    <input type="checkbox" id="show-date">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="option">
+                <span class="option-label">Day of week</span>
+                <label class="switch">
+                    <input type="checkbox" id="show-day">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="option">
+                <span class="option-label">12-hour format</span>
+                <label class="switch">
+                    <input type="checkbox" id="time-format">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="option">
+                <span class="option-label">Show AM/PM</span>
+                <label class="switch">
+                    <input type="checkbox" id="show-ampm">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="appearance" style="display: none;">
+        <div class="section">
+            <div class="section-title">Clock Style</div>
+            <select id="clock-style">
+                <option value="digital">Digital</option>
+                <option value="analog">Analog</option>
+            </select>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Color Theme</div>
+            <select id="gradient-style">
+                <option value="dynamic">Auto (Time-based)</option>
+                <option value="light">Light</option>
+                <option value="aurora">Aurora</option>
+                <option value="graphite">Graphite</option>
+                <option value="pacific">Pacific</option>
+                <option value="sierra">Sierra</option>
+                <option value="sunrise">Sunrise</option>
+                <option value="horizon">Horizon</option>
+                <option value="twilight">Twilight</option>
+                <option value="midnight">Midnight</option>
+                <option value="rose">Rose</option>
+                <option value="forest">Forest</option>
+                <option value="ocean">Ocean</option>
+                <option value="desert">Desert</option>
+                <option value="lavender">Lavender</option>
+                <option value="mint">Mint</option>
+            </select>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Font</div>
+            <select id="font-style">
+                <option value="Mattone">Mattone</option>
+                <option value="Inter">Inter</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Montserrat">Montserrat</option>
+                <option value="Open Sans">Open Sans</option>
+                <option value="Lato">Lato</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="tab-content" id="advanced" style="display: none;">
+        <div class="section">
+            <div class="section-title">Visual Effects</div>
+            <div class="option">
+                <span class="option-label">Enable animations</span>
+                <label class="switch">
+                    <input type="checkbox" id="enable-animations">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="option">
+                <span class="option-label">Grain effect</span>
+                <label class="switch">
+                    <input type="checkbox" id="show-grain">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Analog Clock specific settings -->
+        <div id="analog-settings" class="section">
+            <div class="section-title">Analog Features</div>
+            <div class="option">
+                <span class="option-label">Hour markers</span>
+                <label class="switch">
+                    <input type="checkbox" id="show-markers">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="option">
+                <span class="option-label">Smooth hand motion</span>
+                <label class="switch">
+                    <input type="checkbox" id="smooth-motion">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div id="status"></div>
+
+    <script src="dist/popup.js"></script>
+</body>
+</html>
