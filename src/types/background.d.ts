@@ -1,6 +1,6 @@
 // Type definitions for background script
 
-interface ThemeData {
+export interface ThemeData {
   backgroundColor: string;
   textColor: string;
   gradientColors?: string[];
@@ -23,7 +23,7 @@ interface ThemeData {
   grainBlendMode?: string;
 }
 
-declare const DEFAULT_SETTINGS: {
+export const DEFAULT_SETTINGS: {
   clockStyle: 'digital' | 'analog' | 'both';
   timeFormat: '12' | '24';
   showSeconds: boolean;
@@ -61,29 +61,30 @@ declare const DEFAULT_SETTINGS: {
 };
 
 // Global variables
-declare let currentSettings: typeof DEFAULT_SETTINGS;
-declare let themeData: ThemeData;
+export declare let currentSettings: typeof DEFAULT_SETTINGS;
+export declare let themeData: ThemeData;
 
 // Functions
-declare function applyThemeSettings(settings: typeof DEFAULT_SETTINGS): void;
-declare function updateThemeData(settings: typeof DEFAULT_SETTINGS): ThemeData;
-declare function sendThemeUpdate(tabId?: number): void;
-declare function updateBadge(settings: typeof DEFAULT_SETTINGS): void;
-declare function handleAlarm(alarm: chrome.alarms.Alarm): void;
-declare function scheduleNextUpdate(settings: typeof DEFAULT_SETTINGS): void;
-declare function handleTabUpdate(tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab): void;
-declare function handleTabRemoved(tabId: number, removeInfo: { windowId: number; isWindowClosing: boolean }): void;
+export declare function applyThemeSettings(settings: typeof DEFAULT_SETTINGS): void;
+export declare function updateThemeData(settings: typeof DEFAULT_SETTINGS): ThemeData;
+export declare function sendThemeUpdate(tabId?: number): void;
+export declare function updateBadge(settings: typeof DEFAULT_SETTINGS): void;
+export declare function handleAlarm(alarm: chrome.alarms.Alarm): void;
+export declare function scheduleNextUpdate(settings: typeof DEFAULT_SETTINGS): void;
+export declare function handleTabUpdate(tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab): void;
+export declare function handleTabRemoved(tabId: number, removeInfo: { windowId: number; isWindowClosing: boolean }): void;
 
 // Event listeners
-declare function onMessage(
+export declare function onMessage(
   message: any,
   sender: chrome.runtime.MessageSender,
   sendResponse: (response?: any) => void
 ): boolean | void;
 
-declare function onCommand(command: string): void;
-declare function onStartup(): void;
-declare function onInstalled(details: chrome.runtime.InstalledDetails): void;
+// Chrome extension lifecycle events
+export declare function onCommand(command: string): void;
+export declare function onStartup(): void;
+export declare function onInstalled(details: chrome.runtime.InstalledDetails): void;
 
 // Initialize
-declare function init(): void;
+export declare function init(): void;

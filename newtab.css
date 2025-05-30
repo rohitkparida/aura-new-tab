@@ -5,23 +5,37 @@
     --transition-timing: cubic-bezier(0.4, 0.1, 0.3, 1);
     --text-color: rgba(255, 255, 255, 0.9);
     --text-color-secondary: rgba(255, 255, 255, 0.7);
-    --theme-transition-duration: 0.5s; /* Updated from 1.2s for snappier transitions */
+    --theme-transition-duration: 0.5s;
     --theme-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Responsive sizing variables */
+    --clock-size-min: 8rem;
+    --clock-size-preferred: 20vw;
+    --clock-size-max: 24rem;
+    --date-size-min: 1.5rem;
+    --date-size-preferred: 4vw;
+    --date-size-max: 3rem;
+    --spacing-min: 0.5rem;
+    --spacing-preferred: 2vw;
+    --spacing-max: 2rem;
 }
 
 /* Add these at the top, right after :root */
 html {
     background: #111111; /* Dark fallback color */
     color: rgba(255, 255, 255, 0.9); /* Default text color */
+    font-size: clamp(14px, 2vw, 18px);
 }
 
 /* Update body styles */
 body {
     margin: 0;
     height: 100vh;
-    display: flex;
+    width: 100vw;
+    display: grid;
+    place-items: center;
+    align-content: center;
     justify-content: center;
-    align-items: center;
     position: relative;
     user-select: none;
     background-size: 100% 100%;
@@ -29,7 +43,9 @@ body {
     /* Add these properties */
     opacity: 0;
     transition: opacity 0.3s ease;
-    font-family: 'Mattone', sans-serif; /* Default font */
+    font-family: 'Mattone', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    container-type: size;
 }
 
 body.ready {
@@ -70,26 +86,149 @@ body::before {
 }
 
 /* Define gradients as separate backgrounds */
-.theme-background.graphite { background: radial-gradient(circle at center, #111111 0%, #111111 6%, #181818 18%, #252525 32%, #383838 57%, #535353 79%, #696969 100%); }
-.theme-background.sunrise { background: radial-gradient(circle at center, #FFD700 0%, #FFB84D 25%, #FFA07A 50%, #FF8C69 75%, #FF7F50 100%); }
-.theme-background.horizon { background: radial-gradient(circle at center, #E6B980 0%, #EAC5A3 25%, #B3CDE0 50%, #6497B1 75%, #005B96 100%); }
-.theme-background.twilight { background: radial-gradient(circle at center, #9370DB 0%, #8A2BE2 25%, #9932CC 50%, #BA55D3 75%, #DDA0DD 100%); }
-.theme-background.midnight { background: radial-gradient(circle at center, #232526 0%, #1C1C1C 25%, #151515 50%, #0F0F0F 75%, #090909 100%); }
-.theme-background.aurora { background: radial-gradient(circle at center, #FD783F 0%, #FD783F 6%, #FF5078 18%, #dc46c8 32%, #b446ff 57%, #797ff2 79%, #6D8EFD 100%); }
-.theme-background.pacific { background: radial-gradient(circle at center, #00B4DB 0%, #0083B0 25%, #005C97 50%, #363795 75%, #1C1C7C 100%); }
-.theme-background.sierra { background: radial-gradient(circle at center, #FFB75E 0%, #ED8F03 25%, #FA7199 50%, #C23B47 75%, #961B30 100%); }
-.theme-background.rose { background: radial-gradient(circle at center, #FFDEE1 0%, #FFB5C1 25%, #FF8FA3 50%, #FF738B 75%, #FF5874 100%); }
-.theme-background.forest { background: radial-gradient(circle at center, #2ECC71 0%, #27AE60 25%, #218C74 50%, #145A32 75%, #0B3B24 100%); }
-.theme-background.ocean { background: radial-gradient(circle at center, #89F7FE 0%, #66A6FF 25%, #4834D4 50%, #30336B 75%, #130F40 100%); }
-.theme-background.desert { background: radial-gradient(circle at center, #F4D03F 0%, #F5B041 25%, #E67E22 50%, #CA6F1E 75%, #935116 100%); }
-.theme-background.lavender { background: radial-gradient(circle at center, #E8E8FF 0%, #D4BFFF 25%, #B19CD9 50%, #8E44AD 75%, #6C3483 100%); }
-.theme-background.mint { background: radial-gradient(circle at center, #AAFFA9 0%, #9EECC6 25%, #7FCFB6 50%, #5FB2A6 75%, #42958F 100%); }
-.theme-background.light { background: radial-gradient(circle at center, #FFFFFF 0%, #F8F9FA 25%, #E9ECEF 50%, #DEE2E6 75%, #CED4DA 100%); }
+.theme-background.graphite {
+    background: radial-gradient(ellipse at center, #2a2a2a 0%, #1a1a1a 50%, #0a0a0a 100%);
+}
+
+.theme-background.sunrise {
+    background: radial-gradient(ellipse at bottom, #ff7b7b 0%, #ff9a56 25%, #ffad56 50%, #87ceeb 75%, #4682b4 100%);
+}
+
+.theme-background.horizon {
+    background: radial-gradient(ellipse at center, #ff6b6b 0%, #ffa726 30%, #42a5f5 70%, #1e3a8a 100%);
+}
+
+.theme-background.twilight {
+    background: radial-gradient(ellipse at top, #667eea 0%, #764ba2 50%, #2c1810 100%);
+}
+
+.theme-background.midnight {
+    background: radial-gradient(ellipse at center, #232526 0%, #414345 50%, #0f0f23 100%);
+}
+
+.theme-background.aurora {
+    background: radial-gradient(ellipse at center, #00c9ff 0%, #92fe9d 30%, #ff758c 60%, #ff7eb3 100%);
+}
+
+.theme-background.pacific {
+    background: radial-gradient(ellipse at center, #667db6 0%, #0082c8 50%, #0052a3 100%);
+}
+
+.theme-background.sierra {
+    background: radial-gradient(ellipse at center, #8B5A3C 0%, #5D4037 40%, #3E2723 80%, #1A0E0A 100%);
+}
+
+.theme-background.rose {
+    background: radial-gradient(ellipse at center, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+}
+
+.theme-background.forest {
+    background: radial-gradient(ellipse at center, #134e5e 0%, #71b280 50%, #2d5016 100%);
+}
+
+.theme-background.ocean {
+    background: radial-gradient(ellipse at center, #74b9ff 0%, #0984e3 50%, #2d3436 100%);
+}
+
+.theme-background.desert {
+    background: radial-gradient(ellipse at center, #ffeaa7 0%, #fdcb6e 40%, #e17055 80%, #2d3436 100%);
+}
+
+.theme-background.lavender {
+    background: radial-gradient(ellipse at center, #a29bfe 0%, #6c5ce7 50%, #2d3436 100%);
+}
+
+.theme-background.mint {
+    background: radial-gradient(ellipse at center, #00cec9 0%, #55a3ff 50%, #2d3436 100%);
+}
+
+.theme-background.dynamic {
+    background: radial-gradient(ellipse at center, #2a2a2a 0%, #1a1a1a 50%, #0a0a0a 100%);
+}
 
 /* Ensure clock container stays above backgrounds */
 .clock-container {
+    display: grid;
+    place-items: center;
+    gap: clamp(var(--spacing-min), var(--spacing-preferred), var(--spacing-max));
     position: relative;
-    z-index: 3;
+    z-index: 2;
+    transition: gap var(--transition-duration) var(--transition-timing);
+    container-type: inline-size;
+    padding: 0;
+    max-width: 100vw;
+    max-height: 100vh;
+    box-sizing: border-box;
+    justify-self: center;
+    align-self: center;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-content: center;
+}
+
+.date-container {
+    color: var(--text-color-secondary);
+    font-size: clamp(var(--date-size-min), var(--date-size-preferred), var(--date-size-max));
+    text-align: center;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+    text-transform: uppercase;
+    transition: all var(--transition-duration) var(--transition-timing);
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(0.5rem, 2vw, 1rem);
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.date-container .day,
+.date-container .date {
+    white-space: nowrap;
+}
+
+/* Container queries for responsive layout */
+@container (max-width: 400px) {
+    .clock-container {
+        gap: clamp(0.5rem, 2vw, 1rem);
+        padding: 0;
+    }
+    
+    .date-container {
+        gap: clamp(0.25rem, 1vw, 0.5rem);
+        font-size: clamp(1rem, 3vw, 1.5rem);
+    }
+    
+    .time {
+        font-size: clamp(4rem, 15vw, 8rem);
+        line-height: 0.9;
+    }
+    
+    .ampm {
+        font-size: clamp(1rem, 3vw, 2.5rem);
+    }
+}
+
+@container (min-width: 800px) {
+    .clock-container {
+        gap: clamp(2rem, 4vw, 3rem);
+    }
+}
+
+/* Additional responsive adjustments for better centering */
+@media (max-height: 600px) {
+    .clock-container {
+        gap: clamp(0.5rem, 1.5vw, 1.5rem);
+        padding: 0;
+    }
+}
+
+@media (min-height: 900px) {
+    .clock-container {
+        gap: clamp(2rem, 5vw, 4rem);
+    }
 }
 
 /* Animations */
@@ -107,63 +246,48 @@ body::before {
 
 /* Time display */
 .time {
-    opacity: 1;
-    letter-spacing: 0.05em;
-    font-weight: 700;
+    font-size: clamp(var(--clock-size-min), var(--clock-size-preferred), var(--clock-size-max));
+    font-weight: 200;
     text-align: center;
-    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: 1;
     color: var(--text-color);
-    user-select: none;
     display: flex;
-    justify-content: center;
     align-items: baseline;
-    position: relative;
-    margin: 0 auto;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: clamp(0.25rem, 1vw, 0.5rem);
+    transition: all var(--transition-duration) var(--transition-timing);
+    white-space: nowrap;
 }
 
 .time-main {
-    font-size: 14vh;
-    transform: translateX(0.2em);
     transition: all var(--transition-duration) var(--transition-timing);
-    /* Add initial state */
     opacity: 0;
-    filter: blur(10px);
-    transition: opacity 0.5s ease, 
-                font-size var(--transition-duration) var(--transition-timing),
-                filter 0.5s ease;
-    will-change: transform, opacity, filter;
+    visibility: hidden;
+    transform: translateY(20px);
 }
 
 .time-main.visible {
     opacity: 1;
-    filter: blur(0);
-}
-
-.time-main.solo { font-size: 20vh; }
-.time-main.with-date { font-size: 14vh; }
-.time-main.with-ampm { transform: translateX(0); }
-
-/* Initial state for time container */
-.time {
-    opacity: 0;
-    transition: opacity 0.5s ease;
-}
-
-.time.visible {
-    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
 
 .ampm {
-    font-size: 8vh;
-    margin-left: 0.4em;
+    font-size: clamp(1.5rem, 4vw, 4rem);
+    font-weight: 300;
     opacity: 0;
     visibility: hidden;
     transform: translateX(-20px);
     transition: all var(--transition-duration) var(--transition-timing);
+    width: 0;
+    overflow: hidden;
     color: var(--text-color);
+    flex-shrink: 0;
+    align-self: baseline;
 }
 
-.ampm.with-date { font-size: 7vh; }
 .ampm.visible {
     opacity: 1;
     visibility: visible;
@@ -203,51 +327,49 @@ body::before {
 
 /* Clock container and date */
 .clock-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1vh;
+    display: grid;
+    place-items: center;
+    gap: clamp(var(--spacing-min), var(--spacing-preferred), var(--spacing-max));
     position: relative;
     z-index: 2;
     transition: gap var(--transition-duration) var(--transition-timing);
+    container-type: inline-size;
+    padding: 0;
+    max-width: 100vw;
+    max-height: 100vh;
+    box-sizing: border-box;
 }
 
 .date-container {
     color: var(--text-color-secondary);
-    font-size: 4vh;
+    font-size: clamp(var(--date-size-min), var(--date-size-preferred), var(--date-size-max));
     text-align: center;
     letter-spacing: 0.05em;
     font-weight: 500;
     text-transform: uppercase;
     transition: all var(--transition-duration) var(--transition-timing);
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: clamp(0.5rem, 2vw, 1rem);
 }
 
-.date-container.solo { font-size: 6vh; }
-.date-container.both-visible { font-size: 3.5vh; }
-.date-container.single-item { font-size: 4.5vh; }
-.date-container .day { margin-right: 1em; }
-.date-container .day:only-child { margin-right: 0; }
-.clock-container.single-element { gap: 0; }
+.date-container .day,
+.date-container .date {
+    white-space: nowrap;
+}
 
 /* Animation disabled states */
-.animations-disabled .fade-in {
-    transition: none !important;
-    animation: none !important;
-}
-
-.animations-disabled .analog-hand {
-    transition: none !important;
-}
-
-/* Keep other transitions working even when animations are disabled */
+.animations-disabled .fade-in,
+.animations-disabled .analog-hand,
 .animations-disabled .time,
 .animations-disabled .time-main,
 .animations-disabled .ampm,
 .animations-disabled .date-container {
     transition: none !important;
+    animation: none !important;
 }
 
-/* Ensure analog clock stays visible when animations are disabled */
 .animations-disabled .analog-clock {
     opacity: 1 !important;
     transform: none !important;
@@ -256,142 +378,200 @@ body::before {
 
 /* Analog clock */
 .analog-clock {
-    width: 300px;
-    height: 300px;
-    border: 3px solid var(--text-color-secondary);
+    width: clamp(200px, 30vmin, 300px);
+    height: clamp(200px, 30vmin, 300px);
+    border: clamp(2px, 0.3vmin, 3px) solid var(--text-color-secondary);
     border-radius: 50%;
     position: relative;
     display: none;
     background: rgba(255, 255, 255, 0.05);
     box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(5px);
+    transition: all var(--transition-duration) var(--transition-timing);
 }
 
 .analog-clock::before {
     content: '';
     position: absolute;
-    width: 320px;
-    height: 320px;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    background: radial-gradient(circle, transparent 60%, rgba(255, 255, 255, 0.1));
-}
-
-.hour-marker {
-    position: absolute;
-    width: 2px;
-    height: 15px;
-    background: var(--text-color-secondary);
-    left: 50%;
-    transform-origin: 50% 150px;
-}
-
-.hour-marker.major {
-    width: 3px;
-    height: 20px;
+    width: clamp(8px, 1.2vmin, 12px);
+    height: clamp(8px, 1.2vmin, 12px);
     background: var(--text-color);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
 }
 
 .analog-hand {
     position: absolute;
-    bottom: 50%;
-    left: 50%;
-    transform-origin: bottom;
     background: var(--text-color);
-    border-radius: 100px;
+    transform-origin: bottom center;
+    border-radius: clamp(1px, 0.1vmin, 2px);
+    transition: transform var(--transition-duration) var(--transition-timing);
 }
 
-.continuous-motion .analog-hand { transition: transform 0.016s linear; }
-.analog-clock:not(.continuous-motion) .second-hand { transition: none; }
-
 .hour-hand {
-    width: 4px;
-    height: 70px;
-    margin-left: -2px;
-    background: linear-gradient(to top, var(--text-color), var(--text-color-secondary));
+    width: clamp(3px, 0.4vmin, 4px);
+    height: 25%;
+    top: 25%;
+    left: 50%;
+    margin-left: calc(-1 * clamp(1.5px, 0.2vmin, 2px));
 }
 
 .minute-hand {
-    width: 3px;
-    height: 110px;
-    margin-left: -1.5px;
-    background: linear-gradient(to top, var(--text-color), var(--text-color-secondary));
+    width: clamp(2px, 0.3vmin, 3px);
+    height: 35%;
+    top: 15%;
+    left: 50%;
+    margin-left: calc(-1 * clamp(1px, 0.15vmin, 1.5px));
 }
 
 .second-hand {
     width: 1px;
-    height: 120px;
+    height: 40%;
+    top: 10%;
+    left: 50%;
     margin-left: -0.5px;
+    background: #ff4757;
+}
+
+.hour-marker {
+    position: absolute;
+    width: clamp(2px, 0.3vmin, 3px);
+    height: clamp(15px, 2vmin, 20px);
     background: var(--text-color-secondary);
-}
-
-.clock-center {
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    background: var(--text-color);
-    border-radius: 50%;
-    top: 50%;
+    top: clamp(5px, 1vmin, 10px);
     left: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    margin-left: calc(-1 * clamp(1px, 0.15vmin, 1.5px));
+    transform-origin: center calc(clamp(200px, 30vmin, 300px) / 2 - clamp(5px, 1vmin, 10px));
 }
 
-.clock-center::after {
-    content: '';
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    background: rgba(0, 0, 0, 0.15);
-    border-radius: 50%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+/* Debug and test buttons */
+.debug-controls {
+    position: fixed;
+    bottom: clamp(10px, 2vw, 20px);
+    left: clamp(10px, 2vw, 20px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(5px, 1vw, 10px);
+    z-index: 1000;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
 }
 
-/* Analog date display */
-.analog-date, .analog-day {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    color: var(--text-color);
-    font-size: 1.2rem;
-    text-align: center;
-}
-
-.analog-date {
-    bottom: 35%;
-    background: color-mix(in srgb, var(--text-color-secondary) 10%, transparent);
-    padding: 5px 15px;
-    border-radius: 15px;
-    backdrop-filter: blur(5px);
-    width: auto;
-}
-
-.analog-day {
-    top: 35%;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    width: 100%;
-}
-
-/* Animation for analog clock hands */
-@keyframes sweepIn {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(var(--final-rotation)); }
-}
-
-.analog-hand.sweep-in { animation: sweepIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-
-/* Mobile responsiveness */
-@media screen and (max-width: 768px) {
-    .time { font-size: 4rem; }
-}
-
-.time-main.ready {
+.debug-controls:hover {
     opacity: 1;
 }
 
-/* Analog clock animations are now handled in the main styles with reduced motion support */
+.debug-button {
+    padding: clamp(4px, 1vw, 8px) clamp(8px, 2vw, 12px);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    font-size: clamp(10px, 2vw, 12px);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.debug-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --text-color: rgba(255, 255, 255, 1);
+        --text-color-secondary: rgba(255, 255, 255, 0.9);
+    }
+    
+    .analog-clock {
+        border-width: 3px;
+        background: rgba(0, 0, 0, 0.8);
+    }
+}
+
+/* Print styles */
+@media print {
+    body {
+        background: white !important;
+        color: black !important;
+    }
+    
+    .theme-background {
+        display: none !important;
+    }
+    
+    .grain {
+        display: none !important;
+    }
+}
+
+/* Focus management for accessibility */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Language-specific font handling */
+body.lang-ja {
+    font-family: 'Mattone', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif;
+}
+
+body.lang-ko {
+    font-family: 'Mattone', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Nanum Gothic', sans-serif;
+}
+
+body.lang-zh {
+    font-family: 'Mattone', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+body.lang-zh-TW {
+    font-family: 'Mattone', 'PingFang TC', 'Hiragino Sans CNS', 'Microsoft JhengHei', sans-serif;
+}
+
+body.lang-hi {
+    font-family: 'Mattone', 'Noto Sans Devanagari', 'Mangal', 'Kokila', sans-serif;
+}
+
+/* Ensure CJK characters display properly in clock */
+body.lang-ja .time-main,
+body.lang-ko .time-main,
+body.lang-zh .time-main,
+body.lang-zh-TW .time-main {
+    letter-spacing: -0.05em;
+}
+
+/* Adjust spacing for Devanagari script */
+body.lang-hi .time-main {
+    letter-spacing: 0;
+}
+
+/* Ensure proper rendering of non-Latin date text */
+body.lang-ja .date-container,
+body.lang-ko .date-container,
+body.lang-zh .date-container,
+body.lang-zh-TW .date-container,
+body.lang-hi .date-container {
+    font-weight: 400;
+}

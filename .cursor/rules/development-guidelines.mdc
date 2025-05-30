@@ -1,0 +1,73 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Development Guidelines & Best Practices
+
+## Code Style & Standards
+
+### TypeScript First
+- **New files**: Always use `.ts` or `.tsx` extensions
+- **Type safety**: Prefer explicit types over `any`
+- **Interfaces**: Define in [src/types/index.ts](mdc:src/types/index.ts) for reusability
+- **Imports**: Use `@/` alias for src imports: `import { ClockSettings } from '@/types'`
+
+### Modern JavaScript/TypeScript
+- **Async/Await**: Prefer over Promises and callbacks
+- **ES Modules**: Use `import/export`, avoid `require()`
+- **Arrow Functions**: For concise function expressions
+- **Destructuring**: Extract properties cleanly
+- **Optional Chaining**: Use `?.` for safe property access
+
+### Performance Optimization
+- **Bundle Size**: Keep imports minimal, use tree-shaking
+- **DOM Updates**: Batch DOM changes, avoid layout thrashing
+- **Memory**: Clean up event listeners and intervals
+- **Chrome APIs**: Use efficient storage patterns, minimize message passing
+
+## File Organization
+
+### Adding New Features
+1. **Types**: Add interfaces to [src/types/index.ts](mdc:src/types/index.ts)
+2. **Implementation**: Create module in appropriate `src/` subdirectory
+3. **Export**: Add barrel export in module's `index.ts`
+4. **Integration**: Import in [src/newtab.ts](mdc:src/newtab.ts) or relevant entry point
+
+### Naming Conventions
+- **Files**: kebab-case (`theme-manager.ts`)
+- **Functions**: camelCase (`updateClockDisplay`)
+- **Types/Interfaces**: PascalCase (`ClockSettings`)
+- **Constants**: UPPER_SNAKE_CASE (`DEFAULT_SETTINGS`)
+
+## Chrome Extension Patterns
+
+### Message Passing
+- Use types from [src/types/messages.ts](mdc:src/types/messages.ts)
+- Create message objects with helper functions
+- Handle async responses properly
+
+### Storage
+- Use `chrome.storage.sync` for user settings
+- Implement proper error handling
+- Cache frequently accessed data
+
+### Manifest V3 Compliance
+- Service worker pattern in [src/background.ts](mdc:src/background.ts)
+- No inline scripts in HTML
+- CSP-compliant resource loading
+
+## Testing & Quality
+
+### Before Committing
+1. Run `npm run lint` - Fix all TypeScript/ESLint errors
+2. Run `npm run format` - Apply Prettier formatting
+3. Run `npm run build` - Ensure production build works
+4. Test in Chrome - Load unpacked extension from `dist/`
+
+### Code Review Focus
+- Type safety and null checks
+- Performance implications
+- Chrome extension security
+- Accessibility considerations
+

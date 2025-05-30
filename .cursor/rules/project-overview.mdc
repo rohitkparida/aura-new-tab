@@ -1,0 +1,40 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Aura Clock Tab - Project Overview
+
+## Project Type
+This is a **Chrome Extension (Manifest V3)** that replaces the new tab page with a customizable clock interface.
+
+## Key Architecture Files
+- [manifest.json](mdc:manifest.json) - Chrome extension manifest defining permissions and entry points
+- [webpack.config.js](mdc:webpack.config.js) - Build configuration with TypeScript support
+- [package.json](mdc:package.json) - Dependencies and build scripts
+- [tsconfig.json](mdc:tsconfig.json) - TypeScript configuration
+
+## Entry Points
+- **New Tab**: [newtab.html](mdc:newtab.html) + [src/newtab.ts](mdc:src/newtab.ts) - Main clock interface
+- **Background**: [src/background.ts](mdc:src/background.ts) - Service worker for extension logic
+- **Popup**: [popup.html](mdc:popup.html) + [src/popup.ts](mdc:src/popup.ts) - Extension popup interface
+- **Content**: [src/content.ts](mdc:src/content.ts) - Content script (if needed)
+
+## Core Technologies
+- **TypeScript** - Primary language (migrating from JavaScript)
+- **Webpack** - Module bundler and build system
+- **Chrome Extension APIs** - Storage, messaging, new tab override
+- **Modern CSS** - Styling with CSS custom properties and animations
+
+## Build System
+- `npm run dev` - Development with hot reload
+- `npm run build` - Production build to `dist/` directory
+- `npm run lint` - ESLint + TypeScript checking
+- `npm run format` - Prettier code formatting
+
+## Development Principles
+- **Modern practices**: Latest TypeScript, ES modules, async/await
+- **Performance-first**: Minimal bundle size, efficient animations
+- **SOLID principles**: Modular architecture with clear separation
+- **Type safety**: Comprehensive TypeScript coverage
+

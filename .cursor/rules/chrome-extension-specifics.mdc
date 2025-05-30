@@ -1,0 +1,105 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Chrome Extension Development Specifics
+
+## Manifest V3 Architecture
+
+### Core Configuration
+[manifest.json](mdc:manifest.json) defines the extension structure:
+- **New Tab Override**: `chrome_url_overrides.newtab` points to [newtab.html](mdc:newtab.html)
+- **Service Worker**: Background script at `dist/background.js`
+- **Permissions**: Only `storage` permission required
+- **Icons**: Standard 16/48/128px sizes in `icons/` directory
+
+### Entry Points & Contexts
+- **New Tab Page**: [newtab.html](mdc:newtab.html) + [src/newtab.ts](mdc:src/newtab.ts) - Main user interface
+- **Background Script**: [src/background.ts](mdc:src/background.ts) - Service worker for extension logic
+- **Popup**: [popup.html](mdc:popup.html) + [src/popup.ts](mdc:src/popup.ts) - Extension popup (if used)
+- **Content Script**: [src/content.ts](mdc:src/content.ts) - Injected into web pages (if needed)
+
+## Chrome APIs & Patterns
+
+### Storage API
+```typescript
+// Use chrome.storage.sync for user settings
+import { ClockSettings } from '@/types';
+
+// Settings are managed through utils/settingsManager
+// Always handle async storage operations properly
+```
+
+### Message Passing
+Defined in [src/types/messages.ts](mdc:src/types/messages.ts):
+- **Type-safe messaging** between contexts
+- **Background ↔ New Tab** communication for theme updates
+- **Async response handling** with proper error management
+
+### Security Constraints
+- **Content Security Policy**: No inline scripts allowed
+- **Resource Loading**: All assets must be bundled or from extension
+- **External Resources**: Must be declared and loaded securely
+
+## Development Workflow
+
+### Build Process
+[webpack.config.js](mdc:webpack.config.js) handles:
+- **TypeScript Compilation**: `.ts` files to JavaScript
+- **Asset Bundling**: Images, fonts, CSS processing
+- **Output Structure**: Builds to `dist/` matching manifest expectations
+- **Development Mode**: Hot reload for faster iteration
+
+### Testing in Chrome
+1. **Build**: `npm run build` creates `dist/` folder
+2. **Load**: Chrome Extensions → Developer mode → Load unpacked
+3. **Debug**: Use Chrome DevTools in each context
+4. **Reload**: Extension reload button after code changes
+
+## Performance Considerations
+
+### New Tab Page Performance
+- **Fast Load**: Minimize initial bundle size
+- **Smooth Animations**: Use CSS transforms and opacity
+- **Memory Efficiency**: Clean up intervals and listeners
+- **DOM Updates**: Batch changes, avoid layout thrashing
+
+### Background Script Efficiency
+- **Service Worker Lifecycle**: Handle start/stop properly
+- **Message Handling**: Efficient async processing
+- **Storage Access**: Cache frequently used settings
+- **Resource Management**: Minimal memory footprint
+
+## Common Chrome Extension Patterns
+
+### Settings Management
+```typescript
+// Centralized in utils/settingsManager
+// Sync with chrome.storage.sync
+// Type-safe with ClockSettings interface
+```
+
+### Theme System
+- **Dynamic Updates**: Background script can trigger theme changes
+- **Time-based**: Automatic theme switching based on time of day
+- **User Preferences**: Stored in Chrome sync storage
+
+### Error Handling
+- **Chrome API Errors**: Handle permission and quota issues
+- **Cross-context Communication**: Robust message passing
+- **Fallback Behavior**: Graceful degradation when APIs fail
+
+## Debugging Tools
+
+### Chrome Extension DevTools
+- **Background Script**: Inspect service worker from Extensions page
+- **New Tab Context**: Standard DevTools on new tab page
+- **Storage Inspector**: Application tab → Storage → Extensions
+- **Network Tab**: Monitor resource loading and API calls
+
+### Common Debug Scenarios
+- **Storage Issues**: Check permissions and quota limits
+- **Message Passing**: Verify sender/receiver contexts
+- **Build Problems**: Check webpack output and console errors
+- **Performance**: Use Performance tab for frame analysis

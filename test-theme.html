@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Test - Aura Clock Tab</title>
+    <link rel="stylesheet" href="newtab.css">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 10;
+        }
+        
+        .theme-button {
+            display: block;
+            margin: 5px 0;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .theme-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .theme-button.active {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .status {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme background elements (same as in newtab.html) -->
+    <div class="theme-background graphite"></div>
+    <div class="theme-background sunrise"></div>
+    <div class="theme-background horizon"></div>
+    <div class="theme-background twilight"></div>
+    <div class="theme-background midnight"></div>
+    <div class="theme-background aurora"></div>
+    <div class="theme-background pacific"></div>
+    <div class="theme-background sierra"></div>
+    <div class="theme-background rose"></div>
+    <div class="theme-background forest"></div>
+    <div class="theme-background ocean"></div>
+    <div class="theme-background desert"></div>
+    <div class="theme-background lavender"></div>
+    <div class="theme-background mint"></div>
+    <div class="theme-background light"></div>
+
+    <div class="controls">
+        <h3>Theme Test</h3>
+        <button class="theme-button" data-theme="graphite">Graphite</button>
+        <button class="theme-button" data-theme="sunrise">Sunrise</button>
+        <button class="theme-button" data-theme="horizon">Horizon</button>
+        <button class="theme-button" data-theme="twilight">Twilight</button>
+        <button class="theme-button" data-theme="midnight">Midnight</button>
+        <button class="theme-button" data-theme="aurora">Aurora</button>
+        <button class="theme-button" data-theme="pacific">Pacific</button>
+        <button class="theme-button" data-theme="sierra">Sierra</button>
+        <button class="theme-button" data-theme="rose">Rose</button>
+        <button class="theme-button" data-theme="forest">Forest</button>
+        <button class="theme-button" data-theme="ocean">Ocean</button>
+        <button class="theme-button" data-theme="desert">Desert</button>
+        <button class="theme-button" data-theme="lavender">Lavender</button>
+        <button class="theme-button" data-theme="mint">Mint</button>
+        <button class="theme-button" data-theme="light">Light</button>
+    </div>
+
+    <div class="status" id="status">
+        Click theme buttons to test background activation
+    </div>
+
+    <h1>Theme Background Test</h1>
+    <p>The background should change when you click the theme buttons</p>
+
+    <script>
+        function activateTheme(themeName) {
+            // Remove active class from all backgrounds
+            const themeBackgrounds = document.querySelectorAll('.theme-background');
+            themeBackgrounds.forEach(bg => {
+                bg.classList.remove('active');
+                bg.classList.add('transitions-enabled');
+            });
+
+            // Activate the selected theme
+            const targetBackground = document.querySelector(`.theme-background.${themeName}`);
+            if (targetBackground) {
+                requestAnimationFrame(() => {
+                    targetBackground.classList.add('active');
+                });
+                document.getElementById('status').textContent = `Theme: ${themeName} - ACTIVE`;
+            } else {
+                document.getElementById('status').textContent = `Theme: ${themeName} - NOT FOUND`;
+            }
+
+            // Update button states
+            document.querySelectorAll('.theme-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeButton = document.querySelector(`[data-theme="${themeName}"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+        }
+
+        // Add click listeners to theme buttons
+        document.querySelectorAll('.theme-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const theme = button.getAttribute('data-theme');
+                activateTheme(theme);
+            });
+        });
+
+        // Activate graphite theme by default
+        setTimeout(() => {
+            activateTheme('graphite');
+        }, 100);
+    </script>
+</body>
+</html> 

@@ -14,6 +14,23 @@ export * from './date-time';
 // Storage utilities
 export * from './storage';
 
+// Settings management
+import * as settingsManager from './settingsManager';
+
+export { settingsManager };
+export type { ClockSettings } from './settingsManager';
+
+// Re-export for backward compatibility
+export const {
+    loadClockSettings,
+    saveClockSettings,
+    initSettingsManager,
+    getSetting: getClockSetting,
+    updateSetting: updateClockSetting,
+    onSettingsChange: onClockSettingsChange,
+    DEFAULT_SETTINGS: DEFAULT_CLOCK_SETTINGS
+} = settingsManager.settingsManager;
+
 // Add more utility exports here as needed
 
 // Re-export common types

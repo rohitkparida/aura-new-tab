@@ -2,9 +2,6 @@ const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
-// Environment
-const isProduction = process.env.NODE_ENV === 'production';
-
 module.exports = (env, argv) => {
   const isProduction = argv.mode === 'production';
   
@@ -60,22 +57,65 @@ module.exports = (env, argv) => {
       }),
       new CopyPlugin({
         patterns: [
-          { from: 'newtab.html', to: '.' },
-          { from: 'manifest.json', to: '.' },
+          { from: 'newtab.html', to: '.', noErrorOnMissing: false },
+          { from: 'manifest.json', to: '.', noErrorOnMissing: false },
           // Only copy these directories if they exist
+          { from: 'icons', to: 'icons', noErrorOnMissing: false },
           { from: 'assets', to: 'assets', noErrorOnMissing: true },
           { from: 'styles', to: 'styles', noErrorOnMissing: true },
           { from: 'fonts', to: 'fonts', noErrorOnMissing: true },
           { from: '_locales', to: '_locales', noErrorOnMissing: true },
-          // Copy legacy files if they exist
-          { from: 'newtab.css', to: 'legacy.css', noErrorOnMissing: true },
-          { from: 'grain-effect.js', to: '.', noErrorOnMissing: true },
-          // Copy other assets
-          { from: '*.css', to: '.', globOptions: { ignore: ['**/node_modules/**'] } },
-          { from: '*.html', to: '.', globOptions: { ignore: ['**/node_modules/**', 'newtab.html'] } },
-          { from: '*.png', to: '.', globOptions: { ignore: ['**/node_modules/**'] } },
-          { from: '*.svg', to: '.', globOptions: { ignore: ['**/node_modules/**'] } },
-          { from: '*.json', to: '.', globOptions: { ignore: ['**/node_modules/**', 'package.json', 'package-lock.json', 'tsconfig.json'] } },
+          // Copy specific files if they exist
+          { from: 'newtab.css', to: '.', noErrorOnMissing: true },
+          // Copy other assets with glob patterns
+          { 
+            from: '*.css', 
+            to: '.', 
+            noErrorOnMissing: true,
+            globOptions: { 
+              ignore: ['**/node_modules/**', 'newtab.css'] 
+            } 
+          },
+          { 
+            from: '*.html', 
+            to: '.', 
+            noErrorOnMissing: true,
+            globOptions: { 
+              ignore: ['**/node_modules/**', 'newtab.html'] 
+            } 
+          },
+          // Only copy these if they exist in the root
+          { 
+            from: '*.png', 
+            to: '.', 
+            noErrorOnMissing: true,
+            globOptions: { 
+              ignore: ['**/node_modules/**'] 
+            } 
+          },
+          { 
+            from: '*.svg', 
+            to: '.', 
+            noErrorOnMissing: true,
+            globOptions: { 
+              ignore: ['**/node_modules/**'] 
+            } 
+          },
+          { 
+            from: '*.json', 
+            to: '.', 
+            noErrorOnMissing: true,
+            globOptions: { 
+              ignore: [
+                '**/node_modules/**', 
+                'package.json', 
+                'package-lock.json', 
+                'tsconfig.json',
+                'tsconfig.node.json',
+                'webpack.config.js'
+              ] 
+            } 
+          },
         ],
       }),
     ],

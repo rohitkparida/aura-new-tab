@@ -32,7 +32,7 @@ export type ThemeName =
     'mint';
 export type GradientStyle = 'solid' | 'linear' | 'radial' | 'conic';
 export type AnimationType = 'fade' | 'slide' | 'zoom' | 'none';
-export type FontFamily = 'Inter' | 'Roboto' | 'Open Sans' | 'Lato' | 'Montserrat' | 'Arial' | 'sans-serif';
+export type FontFamily = 'Mattone' | 'Inter' | 'Roboto' | 'Open Sans' | 'Lato' | 'Montserrat' | 'Arial' | 'sans-serif';
 export type BlendMode = 'normal' | 'multiply' | 'screen' | 'overlay' | 'darken' | 'lighten' | 'color-dodge' | 'color-burn' | 'hard-light' | 'soft-light' | 'difference' | 'exclusion' | 'hue' | 'saturation' | 'color' | 'luminosity';
 
 // Theme related interface
@@ -97,6 +97,7 @@ export interface ClockSettings {
   theme: ThemeName;
   showMarkers?: boolean;
   smoothMotion?: boolean;
+  fontStyle?: 'default' | 'modern' | 'classic' | 'digital';
 }
 
 export interface ClockElements {
@@ -130,7 +131,7 @@ export const DEFAULT_SETTINGS: ClockSettings = {
   showDate: true,
   showDay: true,
   clockStyle: 'digital',
-  fontFamily: 'Inter',
+  fontFamily: 'Mattone',
   fontSize: '1rem',
   fontWeight: '400',
   textColor: '#ffffff',
@@ -159,7 +160,7 @@ export const DEFAULT_SETTINGS: ClockSettings = {
   grainSpeed: 1,
   grainColor: '#ffffff',
   grainBlendMode: 'overlay',
-  theme: 'dynamic',
+  theme: 'graphite',
   showMarkers: true,
   smoothMotion: true
 };

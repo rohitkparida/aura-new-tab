@@ -1,0 +1,51 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Code Architecture & Module Organization
+
+## Source Directory Structure (`src/`)
+
+### Core Modules
+- **[src/types/](mdc:src/types)** - TypeScript type definitions and interfaces
+  - [src/types/index.ts](mdc:src/types/index.ts) - Main type exports and core interfaces
+  - [src/types/messages.ts](mdc:src/types/messages.ts) - Message passing types for Chrome extension
+  - [src/types/chrome.d.ts](mdc:src/types/chrome.d.ts) - Chrome API type extensions
+  - [src/types/global.d.ts](mdc:src/types/global.d.ts) - Global type declarations
+
+### Feature Modules
+- **[src/clock/](mdc:src/clock)** - Clock rendering and time logic
+- **[src/theme/](mdc:src/theme)** - Theme management and application
+  - [src/theme/index.ts](mdc:src/theme/index.ts) - Theme module exports
+- **[src/ui/](mdc:src/ui)** - UI components and interactions
+- **[src/utils/](mdc:src/utils)** - Utility functions and helpers
+  - [src/utils/index.ts](mdc:src/utils/index.ts) - Utility exports including settingsManager
+
+## Key Interfaces & Types
+
+### ClockSettings Interface
+Defined in [src/types/index.ts](mdc:src/types/index.ts) - Central configuration for all clock behavior:
+- Time format, display options, styling
+- Theme and background settings
+- Animation preferences
+- Default settings constant
+
+### Message System
+Chrome extension messaging defined in [src/types/messages.ts](mdc:src/types/messages.ts):
+- Theme updates, settings changes
+- Background script communication
+- Type-safe message creation functions
+
+## Module Dependencies
+- **Entry Point**: [src/newtab.ts](mdc:src/newtab.ts) imports from theme, clock, utils, ui
+- **Type System**: All modules import from [src/types/index.ts](mdc:src/types/index.ts)
+- **Utilities**: Shared via [src/utils/index.ts](mdc:src/utils/index.ts) barrel exports
+- **Webpack Alias**: `@/` maps to `src/` directory for clean imports
+
+## Coding Patterns
+- **Barrel Exports**: Each module has index.ts for clean imports
+- **Type-First**: Interfaces defined before implementation
+- **Functional Style**: Pure functions where possible, minimal side effects
+- **Chrome Extension**: Service worker pattern, message passing, storage API
+

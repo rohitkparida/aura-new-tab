@@ -27,38 +27,61 @@
             }
         }
 
+        /* Responsive design - agnostic to view size */
         body {
-            width: 320px;
+            width: clamp(280px, 80vw, 320px);
             margin: 0;
-            padding: 20px;
+            padding: clamp(16px, 4vw, 20px);
             font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: var(--bg);
             color: var(--text);
+            box-sizing: border-box;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         .header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: clamp(8px, 2vw, 12px);
+            margin-bottom: clamp(16px, 4vw, 24px);
         }
 
         .header-icon {
-            width: 32px;
-            height: 32px;
+            width: clamp(24px, 6vw, 32px);
+            height: clamp(24px, 6vw, 32px);
             color: var(--primary);
+            flex-shrink: 0;
         }
 
         .header-title {
-            font-size: 20px;
+            font-size: clamp(16px, 4vw, 20px);
             font-weight: 600;
             margin: 0;
         }
 
+        .language-selector {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .language-selector select {
+            padding: 4px 8px;
+            font-size: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--text);
+        }
+
         .tabs {
             display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
+            gap: clamp(4px, 1vw, 8px);
+            margin-bottom: clamp(16px, 4vw, 24px);
             background: var(--hover);
             padding: 4px;
             border-radius: var(--radius);
@@ -66,13 +89,14 @@
 
         .tab {
             flex: 1;
-            padding: 8px;
+            padding: clamp(6px, 2vw, 8px);
             border: none;
             border-radius: 8px;
             background: transparent;
             color: var(--text);
             cursor: pointer;
             transition: all 0.2s;
+            font-size: clamp(12px, 3vw, 14px);
         }
 
         .tab.active {
@@ -82,13 +106,13 @@
         }
 
         .section {
-            margin-bottom: 24px;
+            margin-bottom: clamp(16px, 4vw, 24px);
         }
 
         .section-title {
-            font-size: 14px;
+            font-size: clamp(12px, 3vw, 14px);
             font-weight: 600;
-            margin-bottom: 12px;
+            margin-bottom: clamp(8px, 2vw, 12px);
             color: var(--primary);
         }
 
@@ -96,10 +120,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px;
+            padding: clamp(8px, 2vw, 12px);
             background: var(--hover);
             border-radius: var(--radius);
-            margin-bottom: 8px;
+            margin-bottom: clamp(6px, 1.5vw, 8px);
             transition: all 0.2s;
         }
 
@@ -108,14 +132,15 @@
         }
 
         .option-label {
-            font-size: 14px;
+            font-size: clamp(12px, 3vw, 14px);
         }
 
         /* Modern Toggle Switch */
         .switch {
-            width: 44px;
-            height: 24px;
+            width: clamp(36px, 9vw, 44px);
+            height: clamp(20px, 5vw, 24px);
             position: relative;
+            flex-shrink: 0;
         }
 
         .switch input {
@@ -139,8 +164,10 @@
         .slider:before {
             position: absolute;
             content: "";
-            height: 20px;
-            width: 20px;
+            height: calc(100% - 4px);
+            width: calc(100% - 4px);
+            max-height: 20px;
+            max-width: 20px;
             left: 2px;
             bottom: 2px;
             background-color: white;
@@ -153,18 +180,18 @@
         }
 
         input:checked + .slider:before {
-            transform: translateX(20px);
+            transform: translateX(calc(clamp(36px, 9vw, 44px) - clamp(20px, 5vw, 24px)));
         }
 
         /* Select Dropdown */
         select {
             width: 100%;
-            padding: 12px;
+            padding: clamp(8px, 2vw, 12px);
             border: 1px solid var(--border);
             border-radius: var(--radius);
             background: var(--bg);
             color: var(--text);
-            font-size: 14px;
+            font-size: clamp(12px, 3vw, 14px);
             cursor: pointer;
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
@@ -179,33 +206,116 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            padding: 12px 24px;
+            padding: clamp(8px, 2vw, 12px) clamp(16px, 4vw, 24px);
             background: var(--primary);
             color: white;
             border-radius: var(--radius);
-            font-size: 14px;
+            font-size: clamp(12px, 3vw, 14px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             opacity: 0;
             transition: opacity 0.3s;
+            z-index: 1000;
         }
 
         #status.visible {
             opacity: 1;
         }
 
-        /* Add smooth transitions for clock settings */
-        #analog-settings,
-        #digital-settings {
-            transition: opacity 0.3s ease, height 0.3s ease;
-            overflow: hidden;
+        /* Visual feedback for settings changes */
+        .option.changed {
+            background: var(--primary);
+            color: white;
+            animation: settingChanged 0.3s ease;
         }
 
-        #analog-settings:not([style*="display: block"]),
-        #digital-settings:not([style*="display: block"]) {
-            height: 0;
+        @keyframes settingChanged {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        /* Add smooth transitions for clock settings */
+        #analog-settings {
+            transition: opacity 0.3s ease, max-height 0.3s ease;
+            overflow: hidden;
+            max-height: 200px;
+        }
+
+        #analog-settings.hidden {
+            max-height: 0;
             opacity: 0;
             margin: 0;
             padding: 0;
+        }
+
+        /* Loading state */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: clamp(32px, 8vw, 40px);
+            color: var(--text);
+        }
+
+        .spinner {
+            width: clamp(16px, 4vw, 20px);
+            height: clamp(16px, 4vw, 20px);
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: clamp(8px, 2vw, 12px);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error state */
+        .error {
+            padding: clamp(8px, 2vw, 12px);
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: var(--radius);
+            color: #c33;
+            margin-bottom: clamp(12px, 3vw, 16px);
+            font-size: clamp(12px, 3vw, 14px);
+        }
+
+        /* Accessibility improvements */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus styles */
+        button:focus,
+        select:focus,
+        input:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Responsive adjustments for very small screens */
+        @container (max-width: 300px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .language-selector {
+                margin-left: 0;
+                align-self: flex-end;
+            }
         }
     </style>
 </head>
@@ -215,41 +325,55 @@
             <circle cx="12" cy="12" r="10"/>
             <polyline points="12 6 12 12 16 14"/>
         </svg>
-        <h1 class="header-title">Clock Settings</h1>
+        <h1 class="header-title" data-i18n="settings.title">Clock Settings</h1>
+        <div class="language-selector">
+            <select id="language-select" title="Select Language">
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+                <option value="ja">Japanese</option>
+                <option value="ko">Korean</option>
+                <option value="pt">Portuguese</option>
+                <option value="zh">Simplified Chinese</option>
+                <option value="zhTW">Traditional Chinese</option>
+                <option value="hi">Hindi</option>
+            </select>
+        </div>
     </div>
 
     <div class="tabs">
-        <button class="tab active" data-tab="basic">Basic</button>
-        <button class="tab" data-tab="appearance">Appearance</button>
-        <button class="tab" data-tab="advanced">Advanced</button>
+        <button class="tab active" data-tab="basic" data-i18n="settings.basic" title="Basic clock settings">Basic</button>
+        <button class="tab" data-tab="appearance" data-i18n="settings.appearance" title="Customize appearance">Appearance</button>
+        <button class="tab" data-tab="advanced" data-i18n="settings.advanced" title="Advanced features">Advanced</button>
     </div>
 
     <div class="tab-content" id="basic">
         <div class="section">
-            <div class="section-title">Display</div>
+            <div class="section-title" data-i18n="settings.display">Display</div>
             <div class="option">
-                <span class="option-label">Date</span>
+                <span class="option-label" data-i18n="settings.date" title="Show or hide the date">Date</span>
                 <label class="switch">
                     <input type="checkbox" id="show-date">
                     <span class="slider"></span>
                 </label>
             </div>
             <div class="option">
-                <span class="option-label">Day of week</span>
+                <span class="option-label" data-i18n="settings.dayOfWeek" title="Show or hide the day of the week">Day of week</span>
                 <label class="switch">
                     <input type="checkbox" id="show-day">
                     <span class="slider"></span>
                 </label>
             </div>
             <div class="option">
-                <span class="option-label">12-hour format</span>
+                <span class="option-label" data-i18n="settings.twelveHourFormat" title="Switch between 12-hour and 24-hour time format">12-hour format</span>
                 <label class="switch">
                     <input type="checkbox" id="time-format">
                     <span class="slider"></span>
                 </label>
             </div>
             <div class="option">
-                <span class="option-label">Show AM/PM</span>
+                <span class="option-label" data-i18n="settings.showAmPm" title="Show AM/PM indicator in 12-hour format">Show AM/PM</span>
                 <label class="switch">
                     <input type="checkbox" id="show-ampm">
                     <span class="slider"></span>
@@ -260,38 +384,38 @@
 
     <div class="tab-content" id="appearance" style="display: none;">
         <div class="section">
-            <div class="section-title">Clock Style</div>
-            <select id="clock-style">
-                <option value="digital">Digital</option>
-                <option value="analog">Analog</option>
+            <div class="section-title" data-i18n="settings.clockStyle">Clock Style</div>
+            <select id="clock-style" title="Choose between digital numbers or analog clock face">
+                <option value="digital" data-i18n="settings.digital">Digital</option>
+                <option value="analog" data-i18n="settings.analog">Analog</option>
             </select>
         </div>
 
         <div class="section">
-            <div class="section-title">Color Theme</div>
-            <select id="gradient-style">
-                <option value="dynamic">Auto (Time-based)</option>
-                <option value="light">Light</option>
-                <option value="aurora">Aurora</option>
-                <option value="graphite">Graphite</option>
-                <option value="pacific">Pacific</option>
-                <option value="sierra">Sierra</option>
-                <option value="sunrise">Sunrise</option>
-                <option value="horizon">Horizon</option>
-                <option value="twilight">Twilight</option>
-                <option value="midnight">Midnight</option>
-                <option value="rose">Rose</option>
-                <option value="forest">Forest</option>
-                <option value="ocean">Ocean</option>
-                <option value="desert">Desert</option>
-                <option value="lavender">Lavender</option>
-                <option value="mint">Mint</option>
+            <div class="section-title">Theme</div>
+            <select id="gradient-style" title="Choose a color theme for your new tab page">
+                <option value="dynamic" data-i18n="themes.dynamic">Auto (Time-based)</option>
+                <option value="light" data-i18n="themes.light">Light</option>
+                <option value="aurora" data-i18n="themes.aurora">Aurora</option>
+                <option value="graphite" data-i18n="themes.graphite">Graphite</option>
+                <option value="pacific" data-i18n="themes.pacific">Pacific</option>
+                <option value="sierra" data-i18n="themes.sierra">Sierra</option>
+                <option value="sunrise" data-i18n="themes.sunrise">Sunrise</option>
+                <option value="horizon" data-i18n="themes.horizon">Horizon</option>
+                <option value="twilight" data-i18n="themes.twilight">Twilight</option>
+                <option value="midnight" data-i18n="themes.midnight">Midnight</option>
+                <option value="rose" data-i18n="themes.rose">Rose</option>
+                <option value="forest" data-i18n="themes.forest">Forest</option>
+                <option value="ocean" data-i18n="themes.ocean">Ocean</option>
+                <option value="desert" data-i18n="themes.desert">Desert</option>
+                <option value="lavender" data-i18n="themes.lavender">Lavender</option>
+                <option value="mint" data-i18n="themes.mint">Mint</option>
             </select>
         </div>
 
         <div class="section">
-            <div class="section-title">Font</div>
-            <select id="font-style">
+            <div class="section-title" data-i18n="settings.font">Font</div>
+            <select id="font-style" title="Choose a font for the clock">
                 <option value="Mattone">Mattone</option>
                 <option value="Inter">Inter</option>
                 <option value="Roboto">Roboto</option>
@@ -304,16 +428,16 @@
 
     <div class="tab-content" id="advanced" style="display: none;">
         <div class="section">
-            <div class="section-title">Visual Effects</div>
+            <div class="section-title" data-i18n="settings.visualEffects">Visual Effects</div>
             <div class="option">
-                <span class="option-label">Enable animations</span>
+                <span class="option-label" data-i18n="settings.enableAnimations" title="Enable smooth transitions and animations">Enable animations</span>
                 <label class="switch">
                     <input type="checkbox" id="enable-animations">
                     <span class="slider"></span>
                 </label>
             </div>
             <div class="option">
-                <span class="option-label">Grain effect</span>
+                <span class="option-label" data-i18n="settings.grainEffect" title="Add a subtle film grain texture">Grain effect</span>
                 <label class="switch">
                     <input type="checkbox" id="show-grain">
                     <span class="slider"></span>
@@ -323,16 +447,16 @@
 
         <!-- Analog Clock specific settings -->
         <div id="analog-settings" class="section">
-            <div class="section-title">Analog Features</div>
+            <div class="section-title" data-i18n="settings.analogFeatures">Analog Features</div>
             <div class="option">
-                <span class="option-label">Hour markers</span>
+                <span class="option-label" data-i18n="settings.hourMarkers" title="Show hour markers around the clock face">Hour markers</span>
                 <label class="switch">
                     <input type="checkbox" id="show-markers">
                     <span class="slider"></span>
                 </label>
             </div>
             <div class="option">
-                <span class="option-label">Smooth hand motion</span>
+                <span class="option-label" data-i18n="settings.smoothHandMotion" title="Make clock hands move smoothly instead of stepping">Smooth hand motion</span>
                 <label class="switch">
                     <input type="checkbox" id="smooth-motion">
                     <span class="slider"></span>
@@ -342,7 +466,18 @@
     </div>
 
     <div id="status"></div>
+    
+    <!-- Loading state -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <span data-i18n="settings.loading">Loading settings...</span>
+    </div>
 
-    <script src="dist/popup.js"></script>
+    <!-- Error state -->
+    <div id="error" class="error" style="display: none;">
+        <strong data-i18n="settings.error">Error:</strong> <span id="error-message"></span>
+    </div>
+
+    <script src="popup.js"></script>
 </body>
 </html>

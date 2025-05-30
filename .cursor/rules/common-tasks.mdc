@@ -1,0 +1,88 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Common Development Tasks & Workflows
+
+## Quick Start Development
+
+### Setting Up Development Environment
+```bash
+npm install          # Install dependencies
+npm run dev         # Start development server
+npm run build       # Build for production
+```
+
+### Loading Extension in Chrome
+1. Build the extension: `npm run build`
+2. Open Chrome → Extensions → Developer mode
+3. Click "Load unpacked" → Select `dist/` folder
+4. Extension replaces new tab page
+
+## Frequent Code Changes
+
+### Adding New Clock Features
+1. **Types**: Add to `ClockSettings` interface in [src/types/index.ts](mdc:src/types/index.ts)
+2. **Implementation**: Add logic to [src/clock/](mdc:src/clock) modules
+3. **UI**: Update [newtab.html](mdc:newtab.html) and [newtab.css](mdc:newtab.css)
+4. **Integration**: Wire up in [src/newtab.ts](mdc:src/newtab.ts)
+
+### Adding New Themes
+1. **Theme Data**: Define in [src/theme/](mdc:src/theme) modules
+2. **Types**: Add to `ThemeName` type in [src/types/index.ts](mdc:src/types/index.ts)
+3. **Application**: Update theme application logic
+4. **Default**: Add to `DEFAULT_SETTINGS` if needed
+
+### Modifying Settings
+1. **Interface**: Update `ClockSettings` in [src/types/index.ts](mdc:src/types/index.ts)
+2. **Default**: Update `DEFAULT_SETTINGS` constant
+3. **Storage**: Ensure settings manager handles new properties
+4. **UI**: Add controls in popup or settings interface
+
+## Debugging & Testing
+
+### Chrome Extension Debugging
+- **Background Script**: Chrome → Extensions → Inspect service worker
+- **New Tab**: F12 on new tab page
+- **Storage**: Chrome DevTools → Application → Storage → Extensions
+- **Messages**: Console logs in both contexts
+
+### Common Issues
+- **Build Errors**: Check [webpack.config.js](mdc:webpack.config.js) and [tsconfig.json](mdc:tsconfig.json)
+- **Type Errors**: Verify imports from [src/types/index.ts](mdc:src/types/index.ts)
+- **Runtime Errors**: Check Chrome extension console logs
+- **Storage Issues**: Verify Chrome storage permissions in [manifest.json](mdc:manifest.json)
+
+## Performance Optimization
+
+### Bundle Analysis
+```bash
+npm run build       # Check dist/ file sizes
+```
+
+### Clock Performance
+- Minimize DOM queries in clock update loops
+- Use `requestAnimationFrame` for smooth animations
+- Cache DOM elements in `ClockElements` interface
+- Debounce settings changes
+
+### Memory Management
+- Clear intervals on page unload
+- Remove event listeners properly
+- Avoid memory leaks in background script
+
+## Code Quality Checks
+
+### Pre-commit Workflow
+```bash
+npm run lint        # TypeScript + ESLint
+npm run format      # Prettier formatting
+npm run build       # Production build test
+```
+
+### Type Safety
+- Import types from [src/types/index.ts](mdc:src/types/index.ts)
+- Use strict TypeScript settings from [tsconfig.json](mdc:tsconfig.json)
+- Avoid `any` types, prefer proper interfaces
+
