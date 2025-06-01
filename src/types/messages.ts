@@ -51,61 +51,30 @@ export type Message =
   | SettingsChangedMessage
   | ThemeUpdateMessage;
 
-// Helper functions for creating messages
-export function createRequestCurrentThemeDataMessage(): RequestCurrentThemeDataMessage {
-  return { type: MSG_TYPE_REQUEST_CURRENT_THEME_DATA };
-}
-
-export function createRequestDynamicThemeUpdateMessage(): RequestDynamicThemeUpdateMessage {
-  return { type: MSG_TYPE_REQUEST_DYNAMIC_THEME_UPDATE };
-}
-
-export function createSettingsChangedMessage(changedKey: string, newValue: any): SettingsChangedMessage {
-  return {
+// Simplified message creation
+export const createMessage = {
+  requestThemeData: (): RequestCurrentThemeDataMessage => ({ 
+    type: MSG_TYPE_REQUEST_CURRENT_THEME_DATA 
+  }),
+  requestDynamicThemeUpdate: (): RequestDynamicThemeUpdateMessage => ({ 
+    type: MSG_TYPE_REQUEST_DYNAMIC_THEME_UPDATE 
+  }),
+  settingsChanged: (changedKey: string, newValue: any): SettingsChangedMessage => ({
     type: MSG_TYPE_SETTINGS_CHANGED,
-    payload: {
-      changedKey,
-      newValue
-    }
-  };
-}
-
-export function createThemeUpdateMessage(theme: import('./index').ThemeData): ThemeUpdateMessage {
-  return {
+    payload: { changedKey, newValue }
+  }),
+  themeUpdate: (theme: import('./index').ThemeData): ThemeUpdateMessage => ({
     type: MSG_TYPE_THEME_UPDATE,
     theme
-  };
-}
+  })
+};
 
-// Type guard functions
-export function isRequestCurrentThemeDataMessage(
-  message: any
-): message is RequestCurrentThemeDataMessage {
-  return message?.type === MSG_TYPE_REQUEST_CURRENT_THEME_DATA;
-}
-
-export function isRequestDynamicThemeUpdateMessage(
-  message: any
-): message is RequestDynamicThemeUpdateMessage {
-  return message?.type === MSG_TYPE_REQUEST_DYNAMIC_THEME_UPDATE;
-}
-
-export function isSettingsChangedMessage(
-  message: any
-): message is SettingsChangedMessage {
-  return (
-    message?.type === MSG_TYPE_SETTINGS_CHANGED &&
-    typeof message.payload === 'object' &&
-    message.payload !== null &&
-    'changedKey' in message.payload &&
-    'newValue' in message.payload
-  );
-}
-
-export function isThemeUpdateMessage(
-  message: any
-): message is ThemeUpdateMessage {
-  return message?.type === MSG_TYPE_THEME_UPDATE && 'theme' in message;
+// Simplified type guard
+export function isMessageType<T extends Message>(
+  message: any,
+  type: T['type']
+): message is T {
+  return message?.type === type;
 }
 
 // Message sending utilities
@@ -113,18 +82,17 @@ export async function sendMessage<T = any>(
   message: Message
 ): Promise<T | undefined> {
   return new Promise((resolve) => {
-    if (chrome.runtime && chrome.runtime.sendMessage) {
+    if (chrome.runtime?.sendMessage) {
       chrome.runtime.sendMessage(message, (response) => {
-        console.log('[MESSAGES] sendMessage: Raw response received from chrome.runtime.sendMessage:', JSON.stringify(response));
         if (chrome.runtime.lastError) {
-          console.error('[MESSAGES] sendMessage: Error sending message:', chrome.runtime.lastError.message);
+          console.error('[MESSAGES] Error:', chrome.runtime.lastError.message);
           resolve(undefined);
         } else {
           resolve(response as T);
         }
       });
     } else {
-      console.error('[MESSAGES] sendMessage: chrome.runtime.sendMessage is not available.');
+      console.error('[MESSAGES] chrome.runtime.sendMessage not available');
       resolve(undefined);
     }
   });
@@ -138,33 +106,22 @@ export function removeMessageListener(handler: MessageHandler): void {
   chrome.runtime.onMessage.removeListener(handler);
 }
 
-// Message response utilities
-export function createSuccessResponse<T = any>(data?: T) {
-  return { success: true, data };
-}
-
-export function createErrorResponse(error: string, code?: string) {
-  return { success: false, error, code };
-}
-
-export type SuccessResponse<T = any> = {
-  success: true;
-  data: T;
+// Response utilities
+export const createResponse = {
+  success: <T = any>(data?: T) => ({ success: true, data }),
+  error: (error: string, code?: string) => ({ success: false, error, code })
 };
 
-export type ErrorResponse = {
-  success: false;
-  error: string;
-  code?: string;
-};
+export type Response<T = any> = 
+  | { success: true; data: T }
+  | { success: false; error: string; code?: string };
 
-export type Response<T = any> = SuccessResponse<T> | ErrorResponse;
-
-// Type guard for response
-export function isSuccessResponse(response: any): response is SuccessResponse {
+export function isSuccessResponse(response: any): response is { success: true; data: any } {
   return response?.success === true;
 }
 
-export function isErrorResponse(response: any): response is ErrorResponse {
-  return response?.success === false && 'error' in response;
-}
+// Legacy exports for backward compatibility
+export const createRequestCurrentThemeDataMessage = createMessage.requestThemeData;
+export const createRequestDynamicThemeUpdateMessage = createMessage.requestDynamicThemeUpdate;
+export const createSettingsChangedMessage = createMessage.settingsChanged;
+export const createThemeUpdateMessage = createMessage.themeUpdate;

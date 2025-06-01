@@ -15,9 +15,6 @@ import { initI18n, t, formatDate, getCurrentLanguage } from './i18n';
 const $ = (selector: string): HTMLElement | null => document.querySelector(selector);
 
 // Constants from newtab.js
-const ANIMATION_TIMEOUT_MS = 50;
-const OPACITY_TRANSPARENT = '0';
-const OPACITY_VISIBLE = '1';
 // Opacity is now controlled by CSS
 
 // Import types that will likely be needed
@@ -165,18 +162,16 @@ function showAmPm(newValue: ClockSettings['showAmPm']): void {
 
 function showDate(newValue: ClockSettings['showDate']): void {
     if (typeof newValue === 'undefined') return;
-    const dateElement = $('.date');
-    if (dateElement) {
-        dateElement.style.display = newValue ? 'block' : 'none';
-    }
+    cachedSettings.showDate = newValue;
+    // Rely on updateVisibility to handle class toggling and text content
+    updateVisibility(cachedSettings);
 }
 
 function showDay(newValue: ClockSettings['showDay']): void {
     if (typeof newValue === 'undefined') return;
-    const dayElement = $('.day');
-    if (dayElement) {
-        dayElement.style.display = newValue ? 'block' : 'none';
-    }
+    cachedSettings.showDay = newValue;
+    // Rely on updateVisibility to handle class toggling and text content
+    updateVisibility(cachedSettings);
 }
 
 function gradientStyle(newValue: ClockSettings['gradientStyle']): void {
@@ -214,10 +209,15 @@ function showGrain(newValue: ClockSettings['showGrain']): void {
 
 function showMarkers(newValue: ClockSettings['showMarkers']): void {
     if (typeof newValue === 'undefined') return;
+    cachedSettings.showMarkers = newValue;
     const markers = document.querySelectorAll('.hour-marker');
     markers.forEach(marker => {
-        (marker as HTMLElement).style.display = newValue ? 'block' : 'none';
+        // Ensure marker is HTMLElement before calling classList
+        if (marker instanceof HTMLElement) {
+            marker.classList.toggle('hidden', !newValue);
+        }
     });
+    // No need to call updateVisibility as this is specific to analog clock markers
 }
 
 function smoothMotion(newValue: ClockSettings['smoothMotion']): void {
@@ -416,7 +416,7 @@ chrome.storage.onChanged.addListener((changes: { [key: string]: chrome.storage.S
             }
             
             // Handle other settings through the normal handler system
-            const handler = settingsHandlers[key as keyof ClockSettings];
+            const handler = settingHandlers[key as keyof ClockSettings];
             if (handler) {
                 try {
                     console.log(`[AuraClock] Calling handler for ${key}`);
@@ -432,26 +432,29 @@ chrome.storage.onChanged.addListener((changes: { [key: string]: chrome.storage.S
 });
 
 // Map of setting names to their handler functions
-const settingsHandlers: Partial<Record<keyof ClockSettings, (value: any) => void>> = {
-    // Clock display
+const settingHandlers: Record<keyof ClockSettings, (value: any) => void> = {
     clockStyle,
     timeFormat,
     showAmPm,
     showDate,
     showDay,
+    gradientStyle,
+    enableAnimations,
+    showGrain,
+    showMarkers,
+    smoothMotion,
     fontStyle,
     fontFamily,
     fontSize,
     fontWeight,
     textColor,
-    
-    // Background
     backgroundColor,
     backgroundType,
-    gradientStyle,
     gradientColors,
     gradientAngle,
     backgroundImage,
+    animationSpeed,
+    animationType,
     backgroundBlur,
     backgroundBrightness,
     backgroundContrast,
@@ -461,24 +464,14 @@ const settingsHandlers: Partial<Record<keyof ClockSettings, (value: any) => void
     backgroundInvert,
     backgroundSepia,
     backgroundOpacity,
-    
-    // Effects
-    enableAnimations,
-    animationSpeed,
-    animationType,
-    showGrain,
     grainIntensity,
     grainOpacity,
     grainSize,
     grainSpeed,
     grainColor,
     grainBlendMode,
-    showMarkers,
-    smoothMotion,
-    
-    // Theme
     theme: handleThemeChange
-} as const;
+};
 
 // Clock update functions from newtab.js
 function updateDigitalClock(settings: Partial<ClockSettings>): void {
@@ -526,49 +519,46 @@ function updateDigitalClock(settings: Partial<ClockSettings>): void {
 }
 
 function updateClock(): void {
-    // Check if chrome.storage is still available
-    if (!chrome || !chrome.storage || !chrome.storage.sync) {
+    if (!chrome?.storage?.sync) {
         console.error('Chrome Storage API not available. Cannot update clock.');
-        // Potentially set a default state or show an error message to the user
         return;
     }
 
     chrome.storage.sync.get([
-        'clockStyle',
-        'timeFormat',
-        'showAmPm',
-        'showDate',
-        'showDay',
-        'smoothMotion' // for analog clock, will be handled by updateAnalogClock
+        'clockStyle', 'timeFormat', 'showAmPm', 'showDate', 'showDay', 'smoothMotion', 'enableAnimations'
     ], (settings: Partial<ClockSettings>) => {
         if (chrome.runtime.lastError) {
             console.error('Error loading settings in updateClock:', chrome.runtime.lastError.message);
-            // It might be useful to use default settings or inform the user
             return;
         }
-
-        // Ensure settings is an object, even if empty or some keys are missing
         const currentSettings = settings || {};
+        cachedSettings = { ...cachedSettings, ...currentSettings }; // Update cache
 
         try {
-            if (currentSettings.clockStyle === 'digital') {
+            const analogClockElement = $('.analog-clock');
+            const digitalClockTimeElement = $('.clock-container .time');
+            const dateContainerElement = $('.date-container'); // For digital date
+
+            // Default to digital if clockStyle is not set or is undefined
+            const clockStyle = currentSettings.clockStyle || 'digital';
+
+            if (clockStyle === 'digital') {
+                if (digitalClockTimeElement) digitalClockTimeElement.classList.add('visible');
+                if (analogClockElement) analogClockElement.classList.remove('visible');
+                // dateContainerElement visibility managed by updateVisibility
+                document.body.classList.add('digital-clock-active');
+                document.body.classList.remove('analog-clock-active');
                 updateDigitalClock(currentSettings);
-                const analogClockElement = $('.analog-clock');
-                if (analogClockElement) analogClockElement.style.display = 'none';
-                const digitalClockTimeElement = $('.clock-container .time');
-                if (digitalClockTimeElement) digitalClockTimeElement.style.display = 'flex';
-            } else {
-                // Analog or both clock styles
-                const analogClockElement = $('.analog-clock');
-                if (analogClockElement) analogClockElement.style.display = 'block';
-                const digitalClockTimeElement = $('.clock-container .time');
-                if (digitalClockTimeElement) digitalClockTimeElement.style.display = 'none';
-                
-                // Only animate on the first load or when clock style changes
-                const shouldAnimate = !clockIntervalId && (currentSettings.enableAnimations !== false);
-                updateAnalogClock(shouldAnimate);
+            } else if (clockStyle === 'analog') {
+                // Analog clock
+                if (analogClockElement) analogClockElement.classList.add('visible');
+                if (digitalClockTimeElement) digitalClockTimeElement.classList.remove('visible');
+                if (dateContainerElement) dateContainerElement.classList.add('hidden'); // Hide digital date container
+                document.body.classList.add('analog-clock-active');
+                document.body.classList.remove('digital-clock-active');
+                updateAnalogClock(currentSettings.enableAnimations !== false);
             }
-            updateVisibility(currentSettings); // Call updateVisibility
+            updateVisibility(currentSettings);
         } catch (error) {
             console.error('Error updating clock display:', error);
         }
@@ -579,54 +569,59 @@ function updateVisibility(settings: Partial<ClockSettings>): void {
     const dateEl = $('.date-container .date');
     const dayEl = $('.date-container .day');
     const dateContainerEl = $('.date-container');
+    const clockContainerEl = $('.clock-container');
 
-    if (!dateContainerEl) {
-        // console.warn("Element '.date-container' not found.");
-        return;
-    }
+    const analogDayEl = $('.analog-day');
+    const analogDateEl = $('.analog-date');
 
-    // Default to true if undefined or null, explicitly false to hide
     let dateVisible = settings.showDate !== false;
     let dayVisible = settings.showDay !== false;
 
     const now = new Date();
 
+    // Digital clock date/day elements
     if (dateEl) {
-        if (dateVisible) {
-            // Use localized date formatting
-            dateEl.textContent = formatDate(now, { month: 'short', day: 'numeric' });
-            dateEl.style.display = 'inline';
-        } else {
-            dateEl.style.display = 'none';
-        }
+        dateEl.classList.toggle('hidden', !dateVisible);
+        if (dateVisible) dateEl.textContent = formatDate(now, { month: 'short', day: 'numeric' });
     }
-
     if (dayEl) {
-        if (dayVisible) {
-            // Use localized day formatting
-            dayEl.textContent = formatDate(now, { weekday: 'long' });
-            dayEl.style.display = 'inline';
-        } else {
-            dayEl.style.display = 'none';
+        dayEl.classList.toggle('hidden', !dayVisible);
+        if (dayVisible) dayEl.textContent = formatDate(now, { weekday: 'long' });
+        }
+
+    // Analog clock date/day elements
+    if (analogDayEl) {
+        analogDayEl.classList.toggle('hidden', !dayVisible);
+        if (dayVisible) analogDayEl.textContent = formatDate(now, { weekday: 'long' }).toUpperCase();
+    }
+    if (analogDateEl) {
+        analogDateEl.classList.toggle('hidden', !dateVisible);
+        if (dateVisible) analogDateEl.textContent = formatDate(now, { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase();
+    }
+
+    // Digital Date Container visibility
+    if (dateContainerEl) {
+        const isDigitalClockActive = document.body.classList.contains('digital-clock-active');
+        if (isDigitalClockActive) {
+            const shouldHideDateContainer = !dateVisible && !dayVisible;
+            dateContainerEl.classList.toggle('hidden', shouldHideDateContainer);
+            
+            // Add class to clock container for CSS targeting when date is hidden
+            if (clockContainerEl) {
+                clockContainerEl.classList.toggle('date-hidden', shouldHideDateContainer);
+            }
+    } else {
+            // Ensure it's hidden if analog clock is active, as analog has its own date display
+            dateContainerEl.classList.add('hidden');
+            if (clockContainerEl) {
+                clockContainerEl.classList.add('date-hidden');
+            }
         }
     }
-
-    // Adjust layout based on visibility
-    if (!dateVisible && !dayVisible) {
-        dateContainerEl.style.display = 'none';
-    } else {
-        dateContainerEl.style.display = 'block';
-    }
-    // Class for styling adjustments
-    dateContainerEl.classList.toggle('solo', (dateVisible && !dayVisible) || (!dateVisible && dayVisible));
-    dateContainerEl.classList.toggle('both-visible', dateVisible && dayVisible);
-    dateContainerEl.classList.toggle('single-item', (dateVisible && !dayVisible) || (!dateVisible && dayVisible));
-
-    const timeMainEl = $('.time-main');
-    if (timeMainEl) {
-        timeMainEl.classList.toggle('solo', !dateVisible && !dayVisible);
-        timeMainEl.classList.toggle('with-date', dateVisible || dayVisible);
-    }
+    
+    // Note: Styling for .date-container.solo, .both-visible, .single-item might need review 
+    // if they are still relevant with the new animation approach.
+    // For now, we focus on the primary show/hide animation.
 }
 
 /**
@@ -686,40 +681,30 @@ async function init(): Promise<void> {
 function setupClock(settings: Partial<ClockSettings>): void {
     const analogClockElement = $('.analog-clock');
     const digitalClockTimeElement = $('.clock-container .time');
+    const dateContainerElement = $('.date-container');
 
     if (settings.clockStyle === 'analog') {
-        // Setup analog clock
         if (analogClockElement) {
-            analogClockElement.style.display = 'block';
-            const animationsEnabled = settings.enableAnimations !== false;
-            
-            if (animationsEnabled) {
-                analogClockElement.style.opacity = OPACITY_TRANSPARENT;
-                setTimeout(() => {
-                    if (analogClockElement) {
-                        analogClockElement.style.opacity = OPACITY_VISIBLE;
-                    }
-                }, ANIMATION_TIMEOUT_MS);
-            } else {
-                analogClockElement.style.opacity = OPACITY_VISIBLE;
-            }
-            
-            if (analogClockElement) {
+            analogClockElement.classList.add('visible');
+            if (settings.enableAnimations !== false) {
                 createHourMarkersFn(analogClockElement);
             }
-            updateAnalogClock(animationsEnabled);
+            updateAnalogClock(settings.enableAnimations !== false);
         }
+        if (digitalClockTimeElement) digitalClockTimeElement.classList.remove('visible');
+        if (dateContainerElement) dateContainerElement.classList.add('hidden');
         
-        if (digitalClockTimeElement) {
-            digitalClockTimeElement.style.display = 'none';
-        }
+        document.body.classList.add('analog-clock-active');
+        document.body.classList.remove('digital-clock-active');
     } else {
-        // Setup digital clock (default)
-        if (analogClockElement) analogClockElement.style.display = 'none';
-        if (digitalClockTimeElement) digitalClockTimeElement.style.display = 'flex';
+        // Digital clock (default)
+        if (digitalClockTimeElement) digitalClockTimeElement.classList.add('visible');
+        if (analogClockElement) analogClockElement.classList.remove('visible');
+        
         updateDigitalClock(settings);
+        document.body.classList.add('digital-clock-active');
+        document.body.classList.remove('analog-clock-active');
     }
-
     updateVisibility(settings);
 }
 
@@ -730,99 +715,51 @@ function setupClock(settings: Partial<ClockSettings>): void {
 function setupInitialUI(settings: Partial<ClockSettings>): void {
     console.log('[AuraClock] setupInitialUI: Starting UI setup');
     
-    // Ensure body is visible
     if (document.body) {
         document.body.classList.add('ready');
-        document.body.style.opacity = '1';
+        // Opacity is handled by .ready class and CSS transitions
     }
 
-    // Make sure clock elements are visible based on clock style
-        const timeElement = $('.time');
-        const timeMainElement = $('.time-main');
-    const ampmElement = $('.ampm');
-        const dateContainer = $('.date-container');
+    const timeElement = $('.clock-container .time'); // More specific selector for digital time
     const analogClockElement = $('.analog-clock');
+    // dateContainer visibility is handled by updateVisibility called from setupClock
 
-    // Handle clock style switching
     const clockStyle = settings.clockStyle || 'digital';
     console.log('[AuraClock] setupInitialUI: Clock style:', clockStyle);
     
     if (clockStyle === 'analog') {
-        // Setup analog clock visibility
-        if (analogClockElement) {
-            analogClockElement.style.display = 'block';
-            analogClockElement.style.opacity = '1';
-            console.log('[AuraClock] setupInitialUI: Analog clock made visible');
-        }
-        
-        // Hide digital clock
-        if (timeElement) {
-            timeElement.style.display = 'none';
-            console.log('[AuraClock] setupInitialUI: Digital clock hidden');
-        }
+        if (analogClockElement) analogClockElement.classList.add('visible');
+        if (timeElement) timeElement.classList.remove('visible');
+        console.log('[AuraClock] setupInitialUI: Analog clock set to visible, digital hidden');
     } else {
-        // Setup digital clock visibility (default)
-        if (timeElement) {
-            timeElement.classList.add('visible');
-            timeElement.style.display = 'flex';
-            console.log('[AuraClock] setupInitialUI: Digital time element made visible');
-        }
-        if (timeMainElement) {
-            timeMainElement.classList.add('visible');
-            console.log('[AuraClock] setupInitialUI: Time main element made visible');
-        }
-        
-        // Hide analog clock
-        if (analogClockElement) {
-            analogClockElement.style.display = 'none';
-            console.log('[AuraClock] setupInitialUI: Analog clock hidden');
-        }
+        // Digital clock (default)
+            if (timeElement) timeElement.classList.add('visible');
+        if (analogClockElement) analogClockElement.classList.remove('visible');
+        console.log('[AuraClock] setupInitialUI: Digital clock set to visible, analog hidden');
     }
 
-    // Handle animations if enabled
+    // AM/PM and Date container initial animation (if enabled)
+    // These elements have their own .visible or .hidden logic managed by updateDigitalClock and updateVisibility
+    // The initial fade-in might need to be rethought if it conflicts with setting-driven transitions.
+    // For now, ensuring they are correctly set by their respective functions is key.
+
     if (settings.enableAnimations !== false) {
-        // Apply animation classes after a small delay for smooth transitions
-        setTimeout(() => {
-            if (ampmElement && (settings.timeFormat === '12' || settings.showAmPm)) {
-                ampmElement.classList.add('visible');
-            }
-            if (dateContainer) {
-                dateContainer.classList.add('fade-in');
-                // Ensure date container becomes visible after animation
-                setTimeout(() => {
-                    dateContainer.style.opacity = '1';
-                    dateContainer.style.filter = 'blur(0)';
-                    dateContainer.style.transform = 'scale(1)';
-                }, 600); // Wait for animation to complete
-            }
-        }, 50);
+        // The .ampm .visible class is set by updateDigitalClock
+        // The .date-container .hidden class is set by updateVisibility
+        // Initial fade-in via CSS for .ready on body should cover overall page load.
     } else {
-        // Show immediately if animations disabled
-        if (ampmElement && (settings.timeFormat === '12' || settings.showAmPm)) {
-            ampmElement.classList.add('visible');
-        }
-        if (dateContainer) {
-            dateContainer.style.opacity = '1';
-            dateContainer.style.filter = 'blur(0)';
-            dateContainer.style.transform = 'scale(1)';
-        }
+        // If animations are disabled, ensure elements are immediately in their correct state
+        // This is handled by the class toggles setting them to their final state without transition.
     }
 
-    // Start the clock update interval
     startClockInterval();
 
-    // Setup grain effect if enabled
     const grainElement = $('.grain');
     if (grainElement) {
-        if (settings.showGrain !== false) {
-            grainElement.classList.add('visible');
-            console.log('[AuraClock] setupInitialUI: Grain effect enabled');
-        } else {
-            grainElement.classList.remove('visible');
+        grainElement.classList.toggle('visible', settings.showGrain !== false);
+        console.log('[AuraClock] setupInitialUI: Grain effect set to:', settings.showGrain !== false);
         }
-    }
 
-    // Set initial animations state
     if (document.body) {
         document.body.classList.toggle('animations-disabled', settings.enableAnimations === false);
     }
@@ -878,7 +815,8 @@ function requestThemeData(): void {
 function applyFallbackVisibility(): void {
     console.log('[AuraClock] Applying fallback visibility');
     if (document.body) {
-        document.body.style.opacity = OPACITY_VISIBLE;
+        document.body.classList.add('ready'); // Ensures .ready class is present
+        // Opacity is handled by the .ready CSS class, no direct style manipulation needed here
     }
 }
 
@@ -909,7 +847,7 @@ function handleThemeDataResponse(response: { error?: string; themeData?: ThemeDa
     } else {
         console.warn('[AuraClock] Received incomplete or unexpected theme data in handleThemeDataResponse:', response);
         document.body.classList.add('ready');
-        document.body.style.opacity = OPACITY_VISIBLE;
+        document.body.classList.add('ready');
     }
 }
 
@@ -1067,7 +1005,7 @@ function updateAnalogClock(animate: boolean = false): void {
         enableAnimations: settings.enableAnimations !== false
     });
     
-    // Update day and date separately since they're not part of the clock settings
+    // Update day and date based on current settings (not always showing them)
     updateDayAndDateFn({
         date: clockElements.date,
         day: clockElements.day
@@ -1101,9 +1039,9 @@ function safeUpdateClock(): void {
         // Update the clock display
         updateClock();
         
-        // For analog clock, update the hands directly without animation
+        // For analog clock, update the hands smoothly
         if (cachedSettings.clockStyle === 'analog' || cachedSettings.clockStyle === 'both') {
-            updateAnalogClock(false); // false to disable animation on tick
+            updateAnalogClock(false); // false for regular tick updates (no CSS transitions)
             
             // Update hour markers on the hour
             if (seconds === 0) {
@@ -1184,7 +1122,7 @@ settingsManager.onSettingsChange((changes) => {
         Object.entries(changes).forEach(([key, newValue]) => {
             try {
                 const settingKey = key as keyof ClockSettings;
-                const handler = settingsHandlers[settingKey];
+                const handler = settingHandlers[settingKey];
                 
                 if (handler) {
                     console.debug(`${logPrefix} Applying change for '${key}':`, newValue);

@@ -17,7 +17,8 @@ import { ClockElements, ClockSettings } from '../types';
 export function updateClockHands(
     now: Date,
     elements: ClockElements,
-    settings: Pick<ClockSettings, 'smoothMotion' | 'enableAnimations'>
+    settings: Pick<ClockSettings, 'smoothMotion' | 'enableAnimations'>,
+    isRegularTick: boolean = false
 ): void {
     if (!elements.analogHours || !elements.analogMinutes || !elements.analogSeconds) {
         console.warn('Clock hand elements not found');
@@ -39,8 +40,10 @@ export function updateClockHands(
     const minuteDegrees = (smoothMinutes / 60) * 360;
     const hourDegrees = (smoothHours / 12) * 360 + (smoothMinutes / 60) * 30; // 30 degrees per hour (360/12)
 
-    // Apply rotations with transition if animations are enabled
-    const transition = settings.enableAnimations ? 'transform 0.3s ease-in-out' : 'none';
+    // For regular tick updates, disable transitions to prevent glitching
+    // Only use transitions for initial setup or manual changes
+    const useTransition = settings.enableAnimations && !isRegularTick;
+    const transition = useTransition ? 'transform 0.3s ease-in-out' : 'none';
     
     elements.analogSeconds.style.transition = transition;
     elements.analogMinutes.style.transition = transition;
@@ -66,35 +69,14 @@ export function setClockHandsPositions(
         return;
     }
 
-    const now = new Date();
-    const seconds = now.getSeconds();
-    const minutes = now.getMinutes();
-    const hours = now.getHours() % 12;
-
-    // Calculate initial rotations without smooth motion
-    const secondDegrees = (seconds / 60) * 360;
-    const minuteDegrees = (minutes / 60) * 360;
-    const hourDegrees = (hours / 12) * 360 + (minutes / 60) * 30;
-
-    // Set initial positions without transition
-    elements.analogSeconds.style.transition = 'none';
-    elements.analogMinutes.style.transition = 'none';
-    elements.analogHours.style.transition = 'none';
+    // Use updateClockHands with isRegularTick=false for initial positioning
+    // This ensures consistent behavior and smooth motion calculations
+    const extendedSettings = {
+        ...settings,
+        smoothMotion: false // Disable smooth motion for initial positioning
+    };
     
-    elements.analogSeconds.style.transform = `rotate(${secondDegrees}deg)`;
-    elements.analogMinutes.style.transform = `rotate(${minuteDegrees}deg)`;
-    elements.analogHours.style.transform = `rotate(${hourDegrees}deg`;
-    
-    // Force reflow to ensure styles are applied before enabling transitions
-    void elements.analogSeconds.offsetHeight;
-    
-    // Re-enable transitions if animations are enabled
-    if (settings.enableAnimations) {
-        const transition = 'transform 0.3s ease-in-out';
-        elements.analogSeconds.style.transition = transition;
-        elements.analogMinutes.style.transition = transition;
-        elements.analogHours.style.transition = transition;
-    }
+    updateClockHands(new Date(), elements, extendedSettings, false);
 }
 
 /**
@@ -116,11 +98,11 @@ export function updateAnalogClock(
 
     const now = new Date();
     
-    if (animate) {
-        updateClockHands(now, elements, settings);
-    } else {
-        setClockHandsPositions(elements, settings);
-    }
+    // Always use updateClockHands for regular updates to prevent glitching
+    // The animate parameter determines if this is a regular tick (false) or initial setup (true)
+    const isRegularTick = !animate;
+    
+    updateClockHands(now, elements, settings, isRegularTick);
     
     // Update hour markers if they don't exist yet
     if (settings.enableAnimations && !elements.analog.querySelector('.hour-marker')) {
@@ -176,18 +158,19 @@ export function updateDayAndDate(
     settings: Pick<ClockSettings, 'showDate' | 'showDay'>,
     date: Date = new Date()
 ): void {
+    if (elements.day && settings.showDay) {
+        // Show only the day name (e.g., "SATURDAY")
+        const dayOptions: Intl.DateTimeFormatOptions = { weekday: 'long' };
+        elements.day.textContent = date.toLocaleDateString(undefined, dayOptions).toUpperCase();
+    }
+    
     if (elements.date && settings.showDate) {
-        const options: Intl.DateTimeFormatOptions = { 
-            weekday: 'long', 
+        // Show only the date without the day (e.g., "MAY 31, 2025")
+        const dateOptions: Intl.DateTimeFormatOptions = { 
             year: 'numeric', 
             month: 'long', 
             day: 'numeric' 
         };
-        elements.date.textContent = date.toLocaleDateString(undefined, options);
-    }
-    
-    if (elements.day && settings.showDay) {
-        const options: Intl.DateTimeFormatOptions = { weekday: 'long' };
-        elements.day.textContent = date.toLocaleDateString(undefined, options);
+        elements.date.textContent = date.toLocaleDateString(undefined, dateOptions).toUpperCase();
     }
 }

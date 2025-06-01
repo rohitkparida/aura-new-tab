@@ -57,63 +57,23 @@ module.exports = (env, argv) => {
       }),
       new CopyPlugin({
         patterns: [
-          { from: 'newtab.html', to: '.', noErrorOnMissing: false },
-          { from: 'manifest.json', to: '.', noErrorOnMissing: false },
-          // Only copy these directories if they exist
-          { from: 'icons', to: 'icons', noErrorOnMissing: false },
-          { from: 'assets', to: 'assets', noErrorOnMissing: true },
-          { from: 'styles', to: 'styles', noErrorOnMissing: true },
-          { from: 'fonts', to: 'fonts', noErrorOnMissing: true },
-          { from: '_locales', to: '_locales', noErrorOnMissing: true },
-          // Copy specific files if they exist
+          // Required files
+          { from: 'newtab.html', to: '.' },
+          { from: 'manifest.json', to: '.' },
           { from: 'newtab.css', to: '.', noErrorOnMissing: true },
-          // Copy other assets with glob patterns
+          
+          // Directories
+          { from: 'icons', to: 'icons', noErrorOnMissing: true },
+          { from: 'assets', to: 'assets', noErrorOnMissing: true },
+          { from: '_locales', to: '_locales', noErrorOnMissing: true },
+          
+          // Static files (consolidated pattern)
           { 
-            from: '*.css', 
+            from: '*.{html,css,png,svg}', 
             to: '.', 
             noErrorOnMissing: true,
             globOptions: { 
-              ignore: ['**/node_modules/**', 'newtab.css'] 
-            } 
-          },
-          { 
-            from: '*.html', 
-            to: '.', 
-            noErrorOnMissing: true,
-            globOptions: { 
-              ignore: ['**/node_modules/**', 'newtab.html'] 
-            } 
-          },
-          // Only copy these if they exist in the root
-          { 
-            from: '*.png', 
-            to: '.', 
-            noErrorOnMissing: true,
-            globOptions: { 
-              ignore: ['**/node_modules/**'] 
-            } 
-          },
-          { 
-            from: '*.svg', 
-            to: '.', 
-            noErrorOnMissing: true,
-            globOptions: { 
-              ignore: ['**/node_modules/**'] 
-            } 
-          },
-          { 
-            from: '*.json', 
-            to: '.', 
-            noErrorOnMissing: true,
-            globOptions: { 
-              ignore: [
-                '**/node_modules/**', 
-                'package.json', 
-                'package-lock.json', 
-                'tsconfig.json',
-                'tsconfig.node.json',
-                'webpack.config.js'
-              ] 
+              ignore: ['**/node_modules/**', 'newtab.html', 'newtab.css'] 
             } 
           },
         ],
