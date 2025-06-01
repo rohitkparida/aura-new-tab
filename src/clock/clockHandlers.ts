@@ -6,6 +6,7 @@
  */
 
 import { ClockElements, ClockSettings } from '../types';
+import { formatDate } from '../i18n';
 
 /**
  * Updates the positions of the clock hands based on the current time
@@ -159,18 +160,18 @@ export function updateDayAndDate(
     date: Date = new Date()
 ): void {
     if (elements.day && settings.showDay) {
-        // Show only the day name (e.g., "SATURDAY")
+        // Show only the day name (e.g., "SATURDAY") with proper localization
         const dayOptions: Intl.DateTimeFormatOptions = { weekday: 'long' };
-        elements.day.textContent = date.toLocaleDateString(undefined, dayOptions).toUpperCase();
+        elements.day.textContent = formatDate(date, dayOptions).toUpperCase();
     }
     
     if (elements.date && settings.showDate) {
-        // Show only the date without the day (e.g., "MAY 31, 2025")
+        // Show only the date without the day (e.g., "MAY 31, 2025") with proper localization
         const dateOptions: Intl.DateTimeFormatOptions = { 
             year: 'numeric', 
             month: 'long', 
             day: 'numeric' 
         };
-        elements.date.textContent = date.toLocaleDateString(undefined, dateOptions).toUpperCase();
+        elements.date.textContent = formatDate(date, dateOptions).toUpperCase();
     }
 }
